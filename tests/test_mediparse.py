@@ -438,7 +438,8 @@ def test_accounts_login_and_isolation(client):
     assert client.get("/bills").status_code == 401
 
 
-def test_login_is_throttled():
+def test_login_is_throttled(tmp_path, monkeypatch):
+    monkeypatch.setattr(api, "DB", tmp_path / "test.db")
     api.login_attempts.clear()
     c = TestClient(api.app, headers={"X-Hayara": "1"})
     codes = [c.post("/auth/login", json={"email": "x@y.io", "password": "guess-1234"}).status_code for _ in range(11)]
