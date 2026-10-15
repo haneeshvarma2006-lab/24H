@@ -175,3 +175,39 @@ def test_click_to_source_handles_phone_rotation_and_dates():
     buf = io.BytesIO(); sideways.save(buf, "JPEG", exif=exif)
     rotated = locate(buf.getvalue(), doc)
     assert abs(rotated["total"][1] - straight["total"][1]) < 0.02
+
+
+def test_import_cord_and_sroie_then_score(tmp_path, monkeypatch):
+    import importlib.util
+    import sys
+    from eval import compare
+    spec = importlib.util.spec_from_file_location("import_dataset", Path(__file__).resolve().parent.parent / "scripts" / "import_dataset.py")
+    imp = importlib.util.module_from_spec(spec); spec.loader.exec_module(imp)
+    monkeypatch.setattr(imp, "ROOT", tmp_path)
+    png = (Path(__file__).resolve().parent.parent / "data" / "samples" / "bill_04.png").read_bytes()
+
+    cord = tmp_path / "cord"; (cord / "img").mkdir(parents=True); (cord / "json").mkdir()
+    (cord / "img" / "r1.png").write_bytes(png)
+    gt = {"gt_parse": {"menu": [{"nm": "NASI GORENG", "cnt": "2 x", "unitprice": "25.000", "price": "50.000"},
+                                {"nm": ["ES", "TEH"], "cnt": "1", "price": "8,000"}],
+                       "sub_total": {"subtotal_price": "58.000", "tax_price": "5.800"}, "total": {"total_price": "63.800"}}}
+    (cord / "json" / "r1.json").write_text(json.dumps({"ground_truth": json.dumps(gt)}))  # Hugging Face style
+    monkeypatch.setattr(sys, "argv", ["x", "cord", str(cord)]); imp.main()
+    truth = json.loads((tmp_path / "data" / "truth" / "cord_r1.json").read_text())
+    assert truth["labelled"] == ["subtotal", "tax", "total"] and truth["fields"]["total"]["value"] == "63800"
+    assert truth["line_items"][0]["qty"] == "2" and truth["line_items"][1]["description"] == "ES TEH"
+
+    pred = copy.deepcopy(truth)
+    pred["fields"]["hospital_name"]["value"] = "Warung Sari"  # unlabelled field: not scored
+    pred["fields"]["total"]["value"] = "63,800"
+    r = compare(pred, truth)
+    assert (r["fields_ok"], r["fields"], r["items_ok"], r["items"], r["verdicts"]) == (3, 3, 2, 2, 0)
+
+    sroie = tmp_path / "sroie"; (sroie / "img").mkdir(parents=True); (sroie / "box").mkdir(); (sroie / "key").mkdir()
+    (sroie / "img" / "X51.jpg").write_bytes(png)
+    (sroie / "box" / "X51.txt").write_text("72,25,326,25,326,64,72,64,TAN WOON YANN\n")  # OCR boxes, same name
+    (sroie / "key" / "X51.txt").write_text(json.dumps({"company": "TAN WOON YANN", "date": "25/12/2018",
+                                                       "address": "NO.53 JALAN", "total": "9.00"}))
+    monkeypatch.setattr(sys, "argv", ["x", "sroie", str(sroie)]); imp.main()
+    truth = json.loads((tmp_path / "data" / "truth" / "sroie_X51.json").read_text())
+    assert truth["fields"]["bill_date"]["value"] == "25/12/2018" and not truth["items_labelled"]
