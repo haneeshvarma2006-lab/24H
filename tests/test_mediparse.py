@@ -1,10 +1,14 @@
 import copy
+import json
+import shutil
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
 import backend.app as api
 from backend.extract import FIELDS
+from backend.locate import locate
 from backend.validate import amount, validate
 
 
@@ -91,3 +95,12 @@ def test_upload_review_correct_export(client):
 
 def test_rejects_bad_type(client):
     assert client.post("/upload", files={"file": ("x.exe", b"MZ", "application/octet-stream")}).status_code == 415
+
+
+@pytest.mark.skipif(not shutil.which("tesseract"), reason="Tesseract not installed")
+def test_click_to_source_on_demo_bill():
+    root = Path(__file__).resolve().parent.parent / "data"
+    doc = json.loads((root / "truth" / "bill_03.json").read_text())
+    boxes = locate((root / "samples" / "bill_03.png").read_bytes(), doc)
+    assert boxes["total"][0] > 0.7 and boxes["total"][1] > boxes["subtotal"][1]  # bottom right, below subtotal
+    assert boxes["line_items.3"][1] > boxes["line_items.1"][1]  # the repeated medicine gets its own row

@@ -1,0 +1,116 @@
+{
+  "document_type": "bill",
+  "fields": {
+    "patient_name": {
+      "value": "Meena Iyer",
+      "confidence": 1.0
+    },
+    "uhid": {
+      "value": "",
+      "confidence": 1.0
+    },
+    "age": {
+      "value": "34",
+      "confidence": 1.0
+    },
+    "gender": {
+      "value": "Female",
+      "confidence": 1.0
+    },
+    "hospital_name": {
+      "value": "Sanjeevani Medicals",
+      "confidence": 1.0
+    },
+    "hospital_address": {
+      "value": "4 Bazaar Street, Tirupati 517501",
+      "confidence": 1.0
+    },
+    "doctor": {
+      "value": "Dr. K. Rao",
+      "confidence": 1.0
+    },
+    "bill_no": {
+      "value": "SM-0918",
+      "confidence": 1.0
+    },
+    "bill_date": {
+      "value": "13-10-2026",
+      "confidence": 1.0
+    },
+    "admission_date": {
+      "value": "",
+      "confidence": 1.0
+    },
+    "discharge_date": {
+      "value": "",
+      "confidence": 1.0
+    },
+    "subtotal": {
+      "value": "340",
+      "confidence": 1.0
+    },
+    "discount": {
+      "value": "17",
+      "confidence": 1.0
+    },
+    "tax": {
+      "value": "16",
+      "confidence": 1.0
+    },
+    "total": {
+      "value": "339",
+      "confidence": 1.0
+    },
+    "insurer": {
+      "value": "",
+      "confidence": 1.0
+    },
+    "tpa": {
+      "value": "",
+      "confidence": 1.0
+    },
+    "policy_no": {
+      "value": "",
+      "confidence": 1.0
+    },
+    "claim_no": {
+      "value": "",
+      "confidence": 1.0
+    },
+    "claimed_amount": {
+      "value": "",
+      "confidence": 1.0
+    }
+  },
+  "line_items": [
+    {
+      "description": "Azithromycin 500mg (3 tabs)",
+      "qty": "1",
+      "rate": "72",
+      "amount": "72",
+      "confidence": 1.0
+    },
+    {
+      "description": "Cetirizine 10mg (10 tabs)",
+      "qty": "1",
+      "rate": "18",
+      "amount": "18",
+      "confidence": 1.0
+    },
+    {
+      "description": "Cough Syrup 100ml",
+      "qty": "2",
+      "rate": "95",
+      "amount": "190",
+      "confidence": 1.0
+    },
+    {
+      "description": "Vitamin C 500mg (15 tabs)",
+      "qty": "1",
+      "rate": "60",
+      "amount": "60",
+      "confidence": 1.0
+    }
+  ],
+  "mistake": null
+}

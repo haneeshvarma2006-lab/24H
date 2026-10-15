@@ -5,6 +5,7 @@ import csv
 import hashlib
 import io
 import json
+import shutil
 import sqlite3
 from pathlib import Path
 
@@ -15,6 +16,7 @@ from openpyxl import Workbook
 from pydantic import BaseModel
 
 from backend.extract import FIELDS, extract
+from backend.locate import locate
 from backend.validate import validate
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -68,6 +70,13 @@ async def upload(file: UploadFile):
     except Exception as e:  # missing key, rate limit, network, bad model output
         raise HTTPException(502, f"Extraction failed: {e}")
     issues = validate(doc)
+    doc["sources"] = {}
+    # shortcut: click-to-source only for images, PDFs would need page rendering first
+    if file.content_type.startswith("image/") and shutil.which("tesseract"):
+        try:
+            doc["sources"] = locate(data, doc)
+        except Exception:
+            pass  # highlights are a nice-to-have; never fail an upload over them
 
     # store under a hash name: the user's filename never touches the filesystem
     stored_as = hashlib.sha256(data).hexdigest()[:16] + TYPES[file.content_type]
