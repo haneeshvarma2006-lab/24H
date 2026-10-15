@@ -34,10 +34,9 @@ Upload (PDF / phone photo)
 ```
 24H/
   backend/
-    app.py        FastAPI: POST /upload, GET /bills, GET /bills/{id}, PATCH /bills/{id}, GET /export
+    app.py        FastAPI + SQLite: POST /upload, GET /bills, GET /bills/{id}, PATCH /bills/{id}, GET /export
     extract.py    sends the scan to the vision AI model, returns JSON in a fixed format
     validate.py   math, tax, missing-field, confidence and overcharge checks
-    db.py         SQLite (one file, no setup)
   frontend/
     index.html    upload, review queue, side-by-side viewer, export button
   data/
@@ -158,18 +157,15 @@ Rules for the teammate:
 | Overcharge (CGHS/NPPA), bill vs claim cross-check | **Stretch**, after 4:30 AM only if everything else works | Scope control |
 
 ### Output schema (lock this now; everyone codes against it)
-Every leaf field is `{"value": ..., "confidence": 0.0-1.0}`.
+Flat, so it maps 1:1 to spreadsheet columns. Defined in `backend/extract.py` (`FIELDS`).
 ```json
 {
-  "document_type": "bill | claim_form",
-  "patient":   {"name", "uhid", "age", "gender"},
-  "hospital":  {"name", "address"},
-  "doctor":    "name",
-  "dates":     {"bill_date", "admission", "discharge"},
-  "bill_no":   "",
-  "line_items": [{"description", "qty", "rate", "amount"}],
-  "subtotal": 0, "discount": 0, "tax": 0, "total": 0,
-  "insurance": {"insurer", "tpa", "policy_no", "claim_no", "claimed_amount"}
+  "document_type": "bill | claim_form | other",
+  "fields": {
+    "patient_name": {"value": "Ravi Kumar", "confidence": 0.95},
+    "...": "uhid, age, gender, hospital_name, hospital_address, doctor, bill_no, bill_date, admission_date, discharge_date, subtotal, discount, tax, total, insurer, tpa, policy_no, claim_no, claimed_amount"
+  },
+  "line_items": [{"description": "Room rent", "qty": "2", "rate": "1500", "amount": "3000", "confidence": 0.95}]
 }
 ```
 

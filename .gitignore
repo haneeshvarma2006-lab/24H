@@ -1,0 +1,5 @@
+__pycache__/
+.env
+mediparse.db
+data/uploads/
+.pytest_cache/
