@@ -10,11 +10,17 @@ pip install -r requirements.txt
 export GEMINI_API_KEY=...        # Windows: setx GEMINI_API_KEY "..." then open a new terminal
 uvicorn backend.app:app --reload
 ```
-Open http://127.0.0.1:8000/docs to upload a bill and try every endpoint.
+Open **http://127.0.0.1:8000/** for the dashboard (http://127.0.0.1:8000/docs lists every API endpoint).
+Click-to-source highlights need Tesseract on the PATH (`tesseract --version`); without it everything else still works.
 
 ```bash
-python -m pytest                  # validation rules + API flow, no API key needed
+python -m pytest                  # validation rules, click-to-source, API flow, eval scoring; no API key needed
+python eval.py --delay 5          # real accuracy on data/samples vs data/truth (1 Gemini call per bill)
+python scripts/make_demo_bills.py # regenerate the fictitious demo bills + their correct values
 ```
+
+Demo bills in `data/samples/` (all fictitious): `bill_01` clean, `bill_02` wrong total, `bill_03` missing patient name +
+duplicated medicine, `bill_04` clean pharmacy bill, `bill_05_photo` tilted/blurred phone photo of bill_01.
 
 ## API (for the dashboard)
 

@@ -60,13 +60,13 @@ if the printed total is wrong, return the printed total.
 - Do not put subtotal, tax, discount or total rows in line_items."""
 
 
-def extract(data: bytes, mime_type: str) -> dict:
+def extract(data: bytes, mime_type: str, use_cache: bool = True) -> dict:
     """Return {"document_type", "fields": {name: {"value", "confidence"}}, "line_items": [...]}.
 
     Results are cached by file hash, so a demo bill seen once works offline.
     """
     cached = CACHE / f"{hashlib.sha256(data).hexdigest()}.json"
-    if cached.exists():
+    if use_cache and cached.exists():
         return json.loads(cached.read_text())
 
     client = genai.Client()  # reads GEMINI_API_KEY from the environment

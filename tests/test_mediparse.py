@@ -104,3 +104,17 @@ def test_click_to_source_on_demo_bill():
     boxes = locate((root / "samples" / "bill_03.png").read_bytes(), doc)
     assert boxes["total"][0] > 0.7 and boxes["total"][1] > boxes["subtotal"][1]  # bottom right, below subtotal
     assert boxes["line_items.3"][1] > boxes["line_items.1"][1]  # the repeated medicine gets its own row
+
+
+def test_eval_compare_counts_mistakes():
+    from eval import compare
+    truth = json.loads((Path(__file__).resolve().parent.parent / "data" / "truth" / "bill_02.json").read_text())
+    pred = copy.deepcopy(truth)
+    assert compare(pred, truth)["fields_ok"] == compare(pred, truth)["fields"]
+    assert compare(pred, truth)["verdict_ok"]  # the planted wrong total is flagged
+
+    pred["fields"]["bill_date"]["value"] = "11/10/2026"     # same date, other format: still right
+    pred["fields"]["total"]["value"] = "₹5,730.00"         # misread total: wrong, and hides the mistake
+    pred["line_items"][0]["description"] = "Medicines"     # misread row: counted wrong, no math error
+    r = compare(pred, truth)
+    assert r["wrong"] == ["total"] and r["items_ok"] == r["items"] - 1 and not r["verdict_ok"]
