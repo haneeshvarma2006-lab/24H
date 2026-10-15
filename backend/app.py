@@ -13,10 +13,10 @@ import sqlite3
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request, UploadFile
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from openpyxl import Workbook
+from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 from pydantic import BaseModel
 
 from backend.extract import FIELDS, extract
@@ -30,8 +30,6 @@ MAX_BYTES = 20 * 1024 * 1024
 TYPES = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp", "application/pdf": ".pdf"}
 
 app = FastAPI(title="Hayara.ai")
-# the dashboard may be served from another port during development
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
 @app.middleware("http")
@@ -76,11 +74,14 @@ def as_json(row):
             "issues": json.loads(row["issues"])}
 
 
+# plain def: FastAPI runs it in a thread, so slow Gemini/Tesseract calls don't freeze other requests
 @app.post("/upload")
-async def upload(file: UploadFile):
+def upload(file: UploadFile):
     if file.content_type not in TYPES:
         raise HTTPException(415, "Upload a JPG, PNG, WEBP or PDF")
-    data = await file.read()
+    if (file.size or 0) > MAX_BYTES:
+        raise HTTPException(413, "File is larger than 20 MB")
+    data = file.file.read()
     if len(data) > MAX_BYTES:
         raise HTTPException(413, "File is larger than 20 MB")
     try:
@@ -145,7 +146,8 @@ class Correction(BaseModel):
 @app.patch("/bills/{bill_id}")
 def correct(bill_id: int, fix: Correction):
     with db() as conn:
-        doc = json.loads(load(conn, bill_id)["data"])
+        row = load(conn, bill_id)
+        doc = json.loads(row["data"])
         parts = fix.field.split(".")
         if len(parts) == 1 and parts[0] in FIELDS:
             target, key = doc["fields"][parts[0]], "value"
@@ -158,8 +160,10 @@ def correct(bill_id: int, fix: Correction):
                      (bill_id, fix.field, target[key], fix.value))
         target[key], target["confidence"] = fix.value, 1.0  # a human checked it
         issues = validate(doc)
+        # a reviewer's approval survives edits unless the edit creates a new problem
+        kept = row["status"] == "approved" and all(i in json.loads(row["issues"]) for i in issues)
         conn.execute("UPDATE bills SET data = ?, issues = ?, status = ? WHERE id = ?",
-                     (json.dumps(doc), json.dumps(issues), "review" if issues else "approved", bill_id))
+                     (json.dumps(doc), json.dumps(issues), "approved" if kept or not issues else "review", bill_id))
         return as_json(load(conn, bill_id))
 
 
@@ -180,9 +184,16 @@ def export(format: str = "xlsx"):
     if format == "json":
         return docs
 
+    def cell(v):
+        """Text from scans and filenames must stay text: no Excel formulas, no characters that break xlsx."""
+        if not isinstance(v, str):
+            return v
+        v = ILLEGAL_CHARACTERS_RE.sub("", v)
+        return "'" + v if v[:1] in ("=", "+", "@", "\t", "\r") else v
+
     bill_header = ["bill_id", "file", "status", "document_type", *FIELDS]
-    bill_rows = [[d["id"], d["filename"], d["status"], d["data"]["document_type"],
-                  *(d["data"]["fields"][f]["value"] for f in FIELDS)] for d in docs]
+    bill_rows = [[cell(v) for v in [d["id"], d["filename"], d["status"], d["data"]["document_type"],
+                                    *(d["data"]["fields"][f]["value"] for f in FIELDS)]] for d in docs]
     if format == "csv":
         buf = io.StringIO()
         csv.writer(buf).writerows([bill_header, *bill_rows])
@@ -200,7 +211,7 @@ def export(format: str = "xlsx"):
     items.append(["bill_id", "description", "qty", "rate", "amount"])
     for d in docs:
         for i in d["data"]["line_items"]:
-            items.append([d["id"], i["description"], i["qty"], i["rate"], i["amount"]])
+            items.append([cell(v) for v in (d["id"], i["description"], i["qty"], i["rate"], i["amount"])])
     buf = io.BytesIO()
     wb.save(buf)
     return Response(buf.getvalue(),

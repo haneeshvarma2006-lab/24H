@@ -10,7 +10,7 @@
     --bg: #f4f6f9; --panel: #fff; --ink: #102a43; --muted: #52606d; --line: #e1e6ec;
     --blue: #0a65f7; --blue-soft: #e7f0fe; --blue-ink: #0747b3;
     --orange: #f08722; --orange-soft: #fdeedd; --orange-ink: #9a4a06;
-    --green: #12805c; --green-soft: #e3f5ec;
+    --green: #0f7654; --green-soft: #e3f5ec;
     --red: #c81e1e; --red-soft: #fdecec;
     --radius: 10px;
     font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -109,7 +109,7 @@
   .issue.warn:hover { border-color: var(--orange); }
   .issue i { font-style: normal; font-weight: 800; width: 18px; height: 18px; flex: none; border-radius: 50%; display: grid; place-items: center;
              font-size: 12px; color: #fff; background: var(--red); transform: translateY(2px); }
-  .issue.warn i { background: var(--orange); }
+  .issue.warn i { background: #b85a00; }
   .issue small { display: block; color: var(--muted); font-size: 12px; }
 
   .math { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13.5px; }
@@ -125,7 +125,7 @@
   .field label { font-size: 13px; color: var(--muted); }
   .field input, td input { width: 100%; border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; background: #fff; }
   .field input:hover, td input:hover { border-color: #b8c4d1; }
-  .field input:focus, td input:focus { border-color: var(--blue); outline: none; box-shadow: 0 0 0 3px rgb(10 101 247 / .18); }
+  .field input:focus, td input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgb(10 101 247 / .18); }
   .field.err input, tr.err input { border-color: var(--red); background: var(--red-soft); }
   .field.warn input, tr.warn input { border-color: var(--orange); background: var(--orange-soft); }
   .msg { grid-column: 2 / 4; font-size: 12px; color: var(--red); margin: -1px 0 3px; }
@@ -290,18 +290,18 @@ function renderDetail() {
   const boxes = Object.entries(sources).map(([key, [x, y, w, h]]) => {
     const issue = issueFor[key];
     const cls = issue ? `flag ${issue.rule === 'low_confidence' ? '' : 'err'}` : '';
-    return `<button type="button" class="box ${cls}" data-src="${esc(key)}" aria-label="${esc(label(key))} on the scan"
+    return `<button type="button" tabindex="-1" class="box ${cls}" data-src="${esc(key)}" aria-label="${esc(label(key))} on the scan"
       style="left:calc(${x * 100}% - 4px);top:calc(${y * 100}% - 3px);width:calc(${w * 100}% + 8px);height:calc(${h * 100}% + 6px)"></button>`;
   }).join('');
 
   const itemsSum = d.line_items.reduce((s, i) => s + (num(i.amount) ?? 0), 0);
   const rules = new Set(b.issues.map(i => i.rule));
-  const step = (text, bad) => `<span class="${bad ? 'no' : 'ok'}">${text}</span>`;
+  const step = (text, bad, missing) => `<span class="${bad ? 'no' : missing ? '' : 'ok'}">${text}</span>`;
 
   main.innerHTML = `
     <div class="bar">
       <div class="grow">
-        <h1>${esc(f.patient_name.value || 'Patient name missing')}</h1>
+        <h1 tabindex="-1">${esc(f.patient_name.value || 'Patient name missing')}</h1>
         <p>${[f.hospital_name.value, f.bill_no.value && `Bill ${f.bill_no.value}`, f.bill_date.value, b.filename].filter(Boolean).map(esc).join(' · ')}</p>
       </div>
       <span class="pill ${b.status}">${b.status === 'approved' ? 'Approved' : 'Needs review'}</span>
@@ -323,7 +323,7 @@ function renderDetail() {
             <h2 id="checks-h">${plural(b.issues.length, 'issue')} to check${b.status === 'approved' ? ' · approved by reviewer' : ''}</h2>
             ${b.issues.map(i => `<button type="button" class="issue ${i.rule === 'low_confidence' ? 'warn' : ''}" data-target="${esc(i.field)}">
               <i aria-hidden="true">${i.rule === 'low_confidence' ? '?' : '!'}</i>
-              <span>${esc(i.message)}<small>${esc(label(i.field))} · click to fix</small></span></button>`).join('')}
+              <span>${esc(i.message)}<small>${esc(label(i.field))} · ${i.rule === 'low_confidence' ? 'click, check it, press Enter to confirm' : 'click to fix'}</small></span></button>`).join('')}
           </section>`
         : `<section class="checks ok">✓ All checks passed: required fields, line math, duplicates, subtotal, total and AI confidence.</section>`}
 
@@ -331,8 +331,8 @@ function renderDetail() {
           <h2 id="math-h">Math check</h2>
           <div class="math num">
             ${step(`Items ${money(itemsSum)}`, rules.has('items_sum') || rules.has('line_math'))}<em>→</em>
-            ${step(`Subtotal ${money(f.subtotal.value)}`, rules.has('items_sum'))}<em>− discount + tax →</em>
-            ${step(`Total ${money(f.total.value)}`, rules.has('total_math'))}
+            ${step(`Subtotal ${money(f.subtotal.value)}`, rules.has('items_sum'), num(f.subtotal.value) === null)}<em>− discount + tax →</em>
+            ${step(`Total ${money(f.total.value)}`, rules.has('total_math') || num(f.total.value) === null)}
           </div>
         </section>
 
@@ -340,7 +340,7 @@ function renderDetail() {
           const filled = keys.filter(k => String(f[k].value).trim()).length;
           const flagged = keys.some(k => issueFor[k]);
           return `<details ${filled || flagged ? 'open' : ''}>
-            <summary>${title} <small>${filled ? '' : '· not on this document'}</small></summary>
+            <summary>${title} <small>${filled || flagged ? '' : '· not on this document'}</small></summary>
             ${keys.map(k => fieldRow(k, f[k], issueFor[k])).join('')}
           </details>`;
         }).join('')}
@@ -381,7 +381,14 @@ function focusField(key) {
   input.select();
 }
 
+let pointerDown = false;
+addEventListener('pointerdown', () => pointerDown = true, true);
+addEventListener('pointerup', () => pointerDown = false, true);
+// re-rendering between mousedown and mouseup swallows the click, so wait until the button is released
+const afterRelease = () => pointerDown && new Promise(r => addEventListener('pointerup', () => setTimeout(r), { once: true }));
+
 async function select(id) {
+  document.activeElement?.blur();  // an unsaved edit fires its change now, while `current` is still its own bill
   try {
     current = await api(`/bills/${id}`);
   } catch (e) {
@@ -394,30 +401,58 @@ async function select(id) {
   renderList();
 }
 
-function save(input) {
-  const key = input.dataset.key, value = input.value, id = current.id;
-  if (value === input.defaultValue) return;
-  // one PATCH at a time, so fast tabbing through fields never races
+// force: Enter on an unchanged value confirms it (clears "AI is only 62% sure")
+function save(input, force = false) {
+  const key = input.dataset.key, value = input.value, id = current.id, before = input.defaultValue;
+  if (value === before && !force) return;
+  input.defaultValue = value;  // the blur that follows Enter must not send the same edit again
+  const wasApproved = current.status === 'approved';
+  // one request at a time, so fast tabbing through fields never races
   saving = saving.then(async () => {
     try {
       const updated = await api(`/bills/${id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ field: key, value }),
       });
+      await afterRelease();
       if (!current || current.id !== id) return loadBills();
-      const focused = document.activeElement?.dataset?.key;
-      const scroll = [$('#viewer')?.scrollTop, main.querySelector('.data')?.scrollTop];
+      // keep the reviewer exactly where they were: focused field, selection, scroll positions
+      const active = document.activeElement;
+      const focused = active?.dataset?.key || (active === document.body ? key : null);
+      const sel = [active?.selectionStart, active?.selectionEnd];
+      const scrollers = () => [main.querySelector('.panes'), $('#viewer'), main.querySelector('.data')];
+      const scroll = scrollers().map(el => el?.scrollTop || 0);
       current = updated;
       renderDetail();
-      $('#viewer').scrollTop = scroll[0] || 0;
-      main.querySelector('.data').scrollTop = scroll[1] || 0;
-      if (focused) main.querySelector(`input[data-key="${focused}"]`)?.focus();
-      toast(updated.issues.length ? `Saved ${label(key)}. ${plural(updated.issues.length, 'issue')} left.`
-                                  : `Saved ${label(key)}. All checks pass ✓`, updated.issues.length ? '' : 'good');
+      scrollers().forEach((el, i) => el && (el.scrollTop = scroll[i]));
+      const el = focused && main.querySelector(`input[data-key="${focused}"]`);
+      if (el) {
+        el.focus({ preventScroll: true });
+        if (focused === active?.dataset?.key && sel[0] != null) el.setSelectionRange(sel[0], sel[1]);
+      }
+      const n = updated.issues.length;
+      toast(wasApproved && updated.status === 'review' ? `Saved ${label(key)}. That created a new problem, so the bill needs review again.`
+            : n ? `Saved ${label(key)}. ${plural(n, 'issue')} left.` : `Saved ${label(key)}. All checks pass ✓`, n ? '' : 'good');
       await loadBills();
     } catch (e) {
       toast(`Could not save ${label(key)}: ${e.message}`, 'error');
-      input.value = input.defaultValue;
+      if (input.isConnected) input.value = input.defaultValue = before;
     }
+  });
+}
+
+function approve() {
+  const id = current.id;
+  saving = saving.then(async () => {  // after any pending edit, so the approval sees the latest data
+    try {
+      const b = await api(`/bills/${id}/approve`, { method: 'POST' });
+      if (current && current.id === id) {
+        current = b;
+        renderDetail();
+        main.querySelector('.bar h1').focus();
+      }
+      await loadBills();
+      toast('Approved. Ready for export.', 'good');
+    } catch (e) { toast(e.message, 'error'); }
   });
 }
 
@@ -445,7 +480,8 @@ async function upload(files) {
                             : `${file.name}: all checks passed ✓`, b.issues.length ? '' : 'good');
       pending.splice(pending.indexOf(file.name), 1);
       await loadBills();
-      await select(b.id);
+      const a = document.activeElement;  // don't yank the reviewer away from an edit they haven't saved yet
+      if (!(a?.dataset?.key && a.value !== a.defaultValue)) await select(b.id);
     } catch (e) {
       pending.splice(pending.indexOf(file.name), 1);
       renderList();
@@ -470,7 +506,7 @@ $('#tabs').addEventListener('click', e => {
 });
 list.addEventListener('click', e => {
   const b = e.target.closest('.item');
-  if (b) select(+b.dataset.id);
+  if (b) select(+b.dataset.id).then(() => list.querySelector('.item.on')?.focus());
 });
 
 main.addEventListener('focusin', e => { if (e.target.dataset.key) highlight(e.target.dataset.key); });
@@ -480,20 +516,20 @@ main.addEventListener('mouseover', e => {
   if (input) highlight(input.dataset.key);
 });
 main.addEventListener('change', e => { if (e.target.dataset.key) save(e.target); });
-main.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset.key) e.target.blur(); });
+main.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.dataset.key) { e.preventDefault(); save(e.target, true); }
+});
 main.addEventListener('click', async e => {
   const issue = e.target.closest('.issue');
-  if (issue) return focusField(issue.dataset.target);
+  if (issue) {
+    focusField(issue.dataset.target);
+    if (main.querySelector('.box') && !main.querySelector(`.box[data-src="${srcKey(issue.dataset.target)}"]`))
+      toast(`${label(issue.dataset.target)} was not found on the scan image. Check the scan by eye.`);
+    return;
+  }
   const box = e.target.closest('.box');
   if (box) return focusField(box.dataset.src);
-  if (e.target.id === 'approve') {
-    try {
-      current = await api(`/bills/${current.id}/approve`, { method: 'POST' });
-      renderDetail();
-      await loadBills();
-      toast('Approved. Ready for export.', 'good');
-    } catch (err) { toast(err.message, 'error'); }
-  }
+  if (e.target.id === 'approve') approve();
 });
 
 (async () => {

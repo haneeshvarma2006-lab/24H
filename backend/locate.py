@@ -9,13 +9,14 @@ import re
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 
-from PIL import Image
+from PIL import Image, ImageOps
 
 from backend.validate import amount
 
 # which words on the same line identify a number field ("total" also appears in "Sub Total")
 LABELS = {"subtotal": ("sub",), "discount": ("disc",), "tax": ("gst", "tax"),
-          "total": ("net", "payable", "grand"), "claimed_amount": ("claim",)}
+          "total": ("net", "payable", "grand"), "claimed_amount": ("claim",),
+          "bill_date": ("bill", "date"), "admission_date": ("adm",), "discharge_date": ("disch",)}
 
 
 def ocr_words(data: bytes, psm: str) -> list[dict]:
@@ -58,7 +59,7 @@ def union(boxes, size):
 
 def locate(data: bytes, doc: dict) -> dict:
     """{"total": [x, y, w, h], "line_items.2": [...], ...} for every value found on the image."""
-    image = Image.open(io.BytesIO(data))
+    image = ImageOps.exif_transpose(Image.open(io.BytesIO(data)))  # phones store portrait photos sideways + a rotate flag
     if image.width < 1600:  # small text in phone photos needs upscaling before OCR
         image = image.resize((image.width * 2, image.height * 2), Image.LANCZOS)
     buf = io.BytesIO()

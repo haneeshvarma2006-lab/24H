@@ -130,3 +130,48 @@ def test_password_protects_hosted_app(client, monkeypatch):
     assert client.get("/bills", headers={"Authorization": "Basic !!notbase64"}).status_code == 401
     good = base64.b64encode(b"anyone:judges2026").decode()
     assert client.get("/bills", headers={"Authorization": f"Basic {good}"}).status_code == 200
+
+
+def test_blank_rows_are_not_duplicates_and_do_not_crash():
+    doc = make_doc(items=(("Room rent", "2", "1500", "3000"), ("CBC test", "1", "450", "450"),
+                          ("Consumables", "", "", ""), ("Consumables", "", "", "")))
+    assert validate(doc) == []
+
+
+def test_bill_with_no_line_items_is_not_auto_approved():
+    assert rules(make_doc(items=())) == ["items_sum"]
+
+
+def test_approval_survives_unrelated_edit_but_not_new_problem(client):
+    bill_id = client.post("/upload", files={"file": ("bill.jpg", b"img", "image/jpeg")}).json()["id"]
+    assert client.post(f"/bills/{bill_id}/approve").json()["status"] == "approved"   # wrong total, approved as is
+    assert client.patch(f"/bills/{bill_id}", json={"field": "doctor", "value": "Dr. Rao"}).json()["status"] == "approved"
+    r = client.patch(f"/bills/{bill_id}", json={"field": "subtotal", "value": "9999"}).json()
+    assert r["status"] == "review"  # this edit created a new problem
+
+
+def test_export_keeps_scan_text_as_text(client):
+    bill_id = client.post("/upload", files={"file": ("=1+2.png", b"img", "image/png")}).json()["id"]
+    client.patch(f"/bills/{bill_id}", json={"field": "doctor", "value": "=HYPERLINK(\"x\")\x0b"})
+    from openpyxl import load_workbook
+    import io
+    sheet = load_workbook(io.BytesIO(client.get("/export").content))["Bills"]
+    row = [c.value for c in sheet[2]]
+    assert row[1] == "'=1+2.png" and "'=HYPERLINK(\"x\")" in row and all(c.data_type != "f" for c in sheet[2])
+    assert "'=1+2.png" in client.get("/export", params={"format": "csv"}).text
+
+
+@pytest.mark.skipif(not shutil.which("tesseract"), reason="Tesseract not installed")
+def test_click_to_source_handles_phone_rotation_and_dates():
+    from PIL import Image
+    import io
+    root = Path(__file__).resolve().parent.parent / "data"
+    doc = json.loads((root / "truth" / "bill_01.json").read_text())
+    straight = locate((root / "samples" / "bill_01.png").read_bytes(), doc)
+    assert straight["bill_date"][1] > straight["discharge_date"][1]  # Bill Date row sits below Discharge
+
+    sideways = Image.open(root / "samples" / "bill_01.png").rotate(90, expand=True)  # pixels stored turned left
+    exif = Image.Exif(); exif[0x0112] = 6  # "rotate 90° clockwise to display", as phones save portraits
+    buf = io.BytesIO(); sideways.save(buf, "JPEG", exif=exif)
+    rotated = locate(buf.getvalue(), doc)
+    assert abs(rotated["total"][1] - straight["total"][1]) < 0.02

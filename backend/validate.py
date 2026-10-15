@@ -37,11 +37,13 @@ def validate(doc: dict) -> list[dict]:
             flag(f"line_items.{i}.amount", "line_math",
                  f"'{item['description']}': {qty:g} × {rate:,.2f} = {qty * rate:,.2f}, bill says {amt:,.2f}")
         key = (item["description"].strip().lower(), amt)
-        if key in seen:
+        if amt is not None and key in seen:  # rows without an amount (blank lines, headers) are not double charges
             flag(f"line_items.{i}", "duplicate", f"Duplicate line item: '{item['description']}' ({amt:,.2f})")
         seen.add(key)
 
     item_sum = sum(a for a in (amount(i["amount"]) for i in items) if a is not None)
+    if not items and doc.get("document_type") == "bill" and (fields.get("subtotal") or fields.get("total")):
+        flag("subtotal", "items_sum", "No line items were read from this bill, so the total cannot be checked")
     subtotal, total = amount(fields.get("subtotal")), amount(fields.get("total"))
     discount = abs(amount(fields.get("discount")) or 0)
     tax = amount(fields.get("tax")) or 0
