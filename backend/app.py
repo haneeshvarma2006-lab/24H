@@ -22,6 +22,7 @@ from pydantic import BaseModel
 
 from backend.extract import FIELDS, extract
 from backend.locate import first_page_png, locate
+from backend.ocr_extract import ocr_extract
 from backend.validate import amount, cross_check, validate
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -98,13 +99,24 @@ def upload(file: UploadFile):
     data = file.file.read()
     if len(data) > MAX_BYTES:
         raise HTTPException(413, "File is larger than 20 MB")
-    try:
-        doc = extract(data, file.content_type)
-    except Exception as e:  # missing key, rate limit, network, bad model output
-        if getattr(e, "code", None) == 429:
-            raise HTTPException(429, "Gemini free quota is used up for today. Bills already read still open; "
-                                     "try again later or switch model.")
-        raise HTTPException(502, f"Extraction failed: {e}")
+    # EXTRACTOR=local skips the AI entirely; otherwise Gemini, with local OCR when it is unavailable
+    local, doc, ai_error = os.environ.get("EXTRACTOR") == "local", None, None
+    if not local:
+        try:
+            doc, engine = extract(data, file.content_type), "Gemini"
+        except Exception as e:  # missing key, quota (429), network, bad model output
+            ai_error = e
+    if doc is None:
+        try:
+            if not shutil.which("tesseract"):
+                raise RuntimeError("Tesseract is not installed")
+            doc, engine = ocr_extract(data, file.content_type), "local OCR"
+        except Exception as e:
+            if getattr(ai_error, "code", None) == 429:
+                raise HTTPException(429, "Gemini free quota is used up for today. Bills already read still open; "
+                                         "try again later or switch model.")
+            raise HTTPException(502, f"Extraction failed: {ai_error or e}")
+    doc["engine"] = engine
     # store under a hash name: the user's filename never touches the filesystem
     stored_as = hashlib.sha256(data).hexdigest()[:16] + TYPES[file.content_type]
     UPLOADS.mkdir(parents=True, exist_ok=True)

@@ -13,6 +13,11 @@ uvicorn backend.app:app --reload
 Open **http://127.0.0.1:8000/** for the dashboard (http://127.0.0.1:8000/docs lists every API endpoint).
 Click-to-source highlights need Tesseract on the PATH (`tesseract --version`); without it everything else still works.
 
+**No AI quota? Still works.** If Gemini fails (quota used up, no internet, no key), Hayara reads the bill locally
+with Tesseract OCR + label rules (`backend/ocr_extract.py`); the dashboard shows "Read by local OCR".
+Force fully-local mode: `set EXTRACTOR=local` (PowerShell: `$env:EXTRACTOR="local"`) before starting the server.
+Local OCR on the 9 demo documents: 120/124 fields correct; it is weaker on blurry photos (more fields go to review).
+
 ```bash
 python -m pytest                  # validation rules, click-to-source, API flow, eval scoring; no API key needed
 python eval.py --delay 5          # real accuracy on data/samples vs data/truth (1 Gemini call per bill)

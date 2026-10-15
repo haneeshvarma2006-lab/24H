@@ -302,7 +302,7 @@ function renderDetail() {
     <div class="bar">
       <div class="grow">
         <h1 tabindex="-1">${esc(f.patient_name.value || 'Patient name missing')}</h1>
-        <p>${[d.document_type === 'claim_form' && 'Insurance claim', f.hospital_name.value, f.bill_no.value && `Bill ${f.bill_no.value}`, f.bill_date.value, b.filename].filter(Boolean).map(esc).join(' · ')}</p>
+        <p>${[d.document_type === 'claim_form' && 'Insurance claim', d.engine && `Read by ${d.engine}`, f.hospital_name.value, f.bill_no.value && `Bill ${f.bill_no.value}`, f.bill_date.value, b.filename].filter(Boolean).map(esc).join(' · ')}</p>
       </div>
       <span class="pill ${b.status}">${b.status === 'approved' ? 'Approved' : 'Needs review'}</span>
       ${b.status === 'review' ? '<button type="button" class="btn" id="approve">Approve as is</button>' : ''}

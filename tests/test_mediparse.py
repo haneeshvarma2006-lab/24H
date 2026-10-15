@@ -293,3 +293,23 @@ def test_quota_falls_back_to_next_model_then_clear_message(client, monkeypatch, 
     monkeypatch.setattr(api, "extract", out_of_quota)
     r = client.post("/upload", files={"file": ("bill.jpg", b"img", "image/jpeg")})
     assert r.status_code == 429 and r.json()["detail"].startswith("Gemini free quota is used up for today.")
+
+
+@pytest.mark.skipif(not shutil.which("tesseract"), reason="Tesseract not installed")
+def test_local_ocr_reads_demo_bill_and_is_the_fallback(client, monkeypatch):
+    from backend.ocr_extract import ocr_extract
+    root = Path(__file__).resolve().parent.parent / "data"
+    doc = ocr_extract((root / "samples" / "bill_01.png").read_bytes(), "image/png")
+    f = {k: v["value"] for k, v in doc["fields"].items()}
+    assert (f["patient_name"], f["total"], f["policy_no"], len(doc["line_items"])) == ("Ravi Kumar", "5730.00", "P-8812-7741", 5)
+
+    def quota(*a, **k):
+        raise RuntimeError("429 RESOURCE_EXHAUSTED")
+    monkeypatch.setattr(api, "extract", quota)  # Gemini out of quota -> local OCR
+    r = client.post("/upload", files={"file": ("b.png", (root / "samples" / "bill_02.png").read_bytes(), "image/png")}).json()
+    assert r["data"]["engine"] == "local OCR" and "total_math" in [i["rule"] for i in r["issues"]]
+
+    monkeypatch.setenv("EXTRACTOR", "local")
+    monkeypatch.setattr(api, "extract", lambda *a: pytest.fail("AI must not be called in local mode"))
+    r = client.post("/upload", files={"file": ("c.png", (root / "samples" / "bill_03.png").read_bytes(), "image/png")}).json()
+    assert r["data"]["engine"] == "local OCR" and r["status"] == "review"
