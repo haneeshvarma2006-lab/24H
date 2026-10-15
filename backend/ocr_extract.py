@@ -51,8 +51,11 @@ def ocr_lines(image_png: bytes, psm: str = "4") -> list[tuple[str, float]]:
         if row["level"] == "5" and row["text"].strip():
             key = (int(row["block_num"]), int(row["par_num"]), int(row["line_num"]))
             lines.setdefault(key, []).append((row["text"], max(float(row["conf"]), 0) / 100))
-    return [(" ".join(w for w, _ in ws).replace("|", " "), sum(c for _, c in ws) / len(ws))
-            for _, ws in sorted(lines.items())]
+    out = []
+    for _, ws in sorted(lines.items()):
+        real = [c for w, c in ws if re.search(r"[A-Za-z0-9]", w)] or [0.0]  # junk like "=", "|" carries no value
+        out.append((" ".join(w for w, _ in ws).replace("|", " "), sum(real) / len(real)))
+    return out
 
 
 def to_png(data: bytes, mime_type: str) -> bytes:
@@ -93,7 +96,7 @@ def parse(lines: list[tuple[str, float]]) -> dict:
             if qty is None and r and (a / r).is_integer():  # OCR often drops the narrow qty column
                 qty = str(int(a / r))
             items.append({"description": desc.strip(" _-"), "qty": qty or "", "rate": rate.replace(",", ""),
-                          "amount": amt.replace(",", ""), "confidence": round(c * 0.9, 2)})
+                          "amount": amt.replace(",", ""), "confidence": round(c, 2)})
             continue
         found = list(LABEL_RE.finditer(text_line))
         # a value runs to the next label of a different field ("MediAssist TPA" stays whole)
@@ -109,15 +112,15 @@ def parse(lines: list[tuple[str, float]]) -> dict:
             for f, v in pairs:
                 v = clean(v, f)
                 if v and f not in values:  # first occurrence wins (e.g. "Total" inside "Sub Total" is matched as subtotal)
-                    values[f], conf[f] = v, round(c * 0.9, 2)
+                    values[f], conf[f] = v, round(c, 2)
 
     # hospital name and address: the first text lines above any label
-    head = [t.strip() for t, _ in lines[:3] if t.strip() and not LABEL_RE.search(t)]
+    head = [(t.strip(), c) for t, c in lines[:4] if re.search(r"[A-Za-z]{3}", t) and not LABEL_RE.search(t)]
     if head and "hospital_name" not in values:
-        values["hospital_name"], conf["hospital_name"] = head[0], 0.75
-        if len(head) > 1 and re.search(r"\d", head[1]):
-            values["hospital_address"] = re.split(r"\s*[-·•]\s*ph\b|\s+ph\s*[:.]", head[1], flags=re.I)[0].strip()
-            conf["hospital_address"] = 0.75
+        values["hospital_name"], conf["hospital_name"] = head[0][0], round(head[0][1], 2)
+        if len(head) > 1 and re.search(r"\d", head[1][0]):
+            values["hospital_address"] = re.split(r"\s*[-·•]\s*ph\b|\s+ph\s*[:.]", head[1][0], flags=re.I)[0].strip()
+            conf["hospital_address"] = round(head[1][1], 2)
     claim = "claim form" in text
     if claim:  # the only date on a claim form besides admission/discharge is the signature date
         values.pop("bill_date", None)
@@ -128,7 +131,18 @@ def parse(lines: list[tuple[str, float]]) -> dict:
     }
 
 
+def pdf_text_lines(pdf: bytes) -> list[tuple[str, float]]:
+    """Digital PDFs carry their text: read it exactly instead of OCR-ing a picture of it."""
+    import pypdfium2
+    text = pypdfium2.PdfDocument(pdf)[0].get_textpage().get_text_range()
+    return [(t.strip(), 0.99) for t in text.splitlines() if t.strip()]
+
+
 def ocr_extract(data: bytes, mime_type: str) -> dict:
+    if mime_type == "application/pdf":
+        lines = pdf_text_lines(data)
+        if len(lines) >= 5:  # scanned PDFs have no text layer and fall through to OCR
+            return parse(lines)
     png = to_png(data, mime_type)
     doc = parse(ocr_lines(png))
     filled = sum(1 for f in doc["fields"].values() if f["value"])

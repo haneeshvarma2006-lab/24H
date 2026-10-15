@@ -302,6 +302,9 @@ def test_local_ocr_reads_demo_bill_and_is_the_fallback(client, monkeypatch):
     doc = ocr_extract((root / "samples" / "bill_01.png").read_bytes(), "image/png")
     f = {k: v["value"] for k, v in doc["fields"].items()}
     assert (f["patient_name"], f["total"], f["policy_no"], len(doc["line_items"])) == ("Ravi Kumar", "5730.00", "P-8812-7741", 5)
+    assert validate(doc) == []  # a clean bill read locally is approved, not sent to review
+    pdf = ocr_extract((root / "samples" / "bill_07.pdf").read_bytes(), "application/pdf")  # digital PDF: text layer
+    assert len(pdf["line_items"]) == 4 and validate(pdf) == []
 
     def quota(*a, **k):
         raise RuntimeError("429 RESOURCE_EXHAUSTED")
