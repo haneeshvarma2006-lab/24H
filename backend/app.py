@@ -136,6 +136,23 @@ def health():
     return {"ok": True}
 
 
+SAMPLES = ROOT / "data" / "samples"
+SAMPLE_RE = re.compile(r"(bill|claim)_\w+\.(png|jpg|pdf)")  # only our fictitious demo documents, never imported datasets
+
+
+@app.get("/samples")
+def samples():
+    """Demo documents the dashboard can load in one click (uploads are wiped when the free server restarts)."""
+    return sorted(p.name for p in SAMPLES.glob("*") if SAMPLE_RE.fullmatch(p.name))
+
+
+@app.get("/samples/{name}")
+def sample(name: str):
+    if not SAMPLE_RE.fullmatch(name) or not (SAMPLES / name).is_file():
+        raise HTTPException(404, "No such demo document")
+    return FileResponse(SAMPLES / name)
+
+
 @app.post("/upload")
 def upload(file: UploadFile, request: Request):
     rate_limit(request.client.host if request.client else "?")

@@ -30,7 +30,7 @@ Honest limits: Gemini and local-mode numbers come from our 9 demo documents (the
 - Works on scans, phone photos and PDFs
 
 ## 3-minute live demo
-1. **Upload all 9** (Ctrl+A in data/samples). *"Any hospital, any layout: scan, phone photo, PDF."*
+1. **Click "▶ Try the demo bills"** on the start page (or Ctrl+A in data/samples and drop them). On the free Render server allow ~1-2 min for all 9. *"Any hospital, any layout: scan, phone photo, PDF."*
 2. **bill_01 → Approved, trust ring 100%.** Hover fields: *"Click-to-source: every value is shown where it was read."* Point at the top: *"Read → Math checked → Verified → Export. 'No human needed' shows how much we automate."*
 3. **bill_02 → wrong total.** *"The bill says ₹6,530, the items add up to ₹5,730. The AI read it right; the math caught the hospital's mistake."* Click the issue → type 5730 → Enter → Approved → **Review next →** jumps to the next bill in the queue.
 4. **bill_03 →** missing patient name + same medicine billed twice.

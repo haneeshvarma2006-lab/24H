@@ -99,6 +99,8 @@
   .empty h1 { font-size: 36px; line-height: 1.1; letter-spacing: -.8px; margin: 0 0 12px; }
   .empty h1 span { background: linear-gradient(90deg, var(--blue), var(--teal)); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .empty p { color: var(--muted); margin: 0 0 22px; font-size: 15px; }
+  .btn.demo { padding: 12px 20px; font-size: 15px; background: linear-gradient(135deg, #6366f1, var(--teal)); box-shadow: 0 8px 22px rgb(79 70 229 / .35); }
+  .demo-note { display: block; margin: 8px 0 22px; font-size: 12px; color: var(--muted); }
   .steps { display: grid; gap: 10px; }
   .steps div { display: grid; grid-template-columns: 34px 1fr; gap: 2px 12px; background: var(--panel); border: 1px solid var(--line);
                border-radius: 12px; padding: 12px 14px; font-size: 13px; color: var(--muted); box-shadow: var(--shadow); }
@@ -559,6 +561,8 @@ function renderEmpty() {
       <span class="kicker">Hospital bills · Insurance claims</span>
       <h1>Read any bill. <span>Catch every wrong rupee.</span></h1>
       <p>Drop a scan, phone photo or PDF. Hayara reads it, checks the math, and only asks you about what's uncertain.</p>
+      <button type="button" class="btn demo" id="demo">▶ Try the demo bills</button>
+      <span class="demo-note">9 fictitious bills and claims, 4 with planted mistakes</span>
       <div class="steps">
         <div><i>1</i><b>AI reads</b>Patient, hospital, every charge, totals and claim data.</div>
         <div><i>2</i><b>Math checks the AI</b>Qty × rate, items → subtotal → total, duplicates, claim vs bill.</div>
@@ -595,6 +599,22 @@ async function upload(files) {
       renderList();
       toast(`${file.name}: ${e.message}`, 'error');
     }
+  }
+}
+
+async function loadDemo(button) {
+  button.disabled = true;
+  try {
+    const names = await api('/samples');
+    const files = await Promise.all(names.map(async n => {
+      const res = await fetch(`/samples/${encodeURIComponent(n)}`);
+      return new File([await res.blob()], n, { type: res.headers.get('content-type').split(';')[0] });
+    }));
+    await upload(files);  // one by one, bills before claims (names sort that way), so claims find their bills
+  } catch (e) {
+    toast(`Could not load the demo bills: ${e.message}`, 'error');
+  } finally {
+    button.disabled = false;
   }
 }
 
@@ -645,6 +665,7 @@ main.addEventListener('click', async e => {
   if (box) return focusField(box.dataset.src);
   if (e.target.id === 'approve') approve();
   if (e.target.id === 'next') select(+e.target.dataset.id);
+  if (e.target.id === 'demo') loadDemo(e.target);
 });
 
 (async () => {

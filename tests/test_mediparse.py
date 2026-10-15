@@ -384,3 +384,11 @@ def test_csp_hash_matches_dashboard_script():
     scripts = re.findall(r"<script>(.*?)</script>", html, re.S)
     assert len(scripts) == 1  # the CSP allows exactly one inline script
     assert base64.b64encode(hashlib.sha256(scripts[0].encode()).digest()).decode() in api.CSP
+
+
+def test_demo_samples_are_listed_and_served_safely(client):
+    names = client.get("/samples").json()
+    assert "bill_01.png" in names and "claim_02.png" in names and all(n.startswith(("bill_", "claim_")) for n in names)
+    assert client.get("/samples/bill_07.pdf").headers["content-type"] == "application/pdf"
+    for bad in ["..%2Fhayara.db", "sroie_X51.jpg", "bill_01.png.exe", "%2Fetc%2Fpasswd"]:
+        assert client.get(f"/samples/{bad}").status_code == 404
