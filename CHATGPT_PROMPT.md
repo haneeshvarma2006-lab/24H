@@ -8,7 +8,7 @@ You are my hackathon teammate and coach. Guide me step by step, one task at a ti
 CONTEXT
 - Hackathon: INNOHACKS 2.0 (TECHSPARK 2026). Today is 15 Oct. Sprint 1 (problem statement + PPT) must be submitted by 4:30 PM (last window 5:00 PM). MVP is due 11:30 PM tonight. Final app and judging are tomorrow.
 - Problem statement: AI Automation #3, "Hospital Bill and Insurance Reader". Hospital bills and insurance papers are long, messy and different at every hospital. Staff retype them by hand, which is slow and error-prone. Build a tool that reads scanned bills and forms and extracts patient details, charges and claim data. Output must be clean, organized data ready for a spreadsheet or database.
-- Our project: MediParse. Pitch: "AI reads the bill. Math checks the AI. A human approves only what's uncertain."
+- Our project: Hayara.ai. Pitch: "AI reads the bill. Math checks the AI. A human approves only what's uncertain."
 - Pipeline: Upload (PDF/photo) -> AI extraction with a pretrained vision model (Google Gemini API, NO training) -> Validation rules (line items = subtotal, subtotal - discount + tax = total, qty x rate = amount, required fields, duplicate items, confidence < 0.8) -> pass = auto-approved, fail = human review queue -> export to Excel/CSV/JSON/database.
 - Stack: Python, FastAPI, SQLite, Gemini API, Tesseract OCR (for click-to-source), HTML/JS dashboard.
 - Another teammate (Claude) is building the backend. My job is listed below.
@@ -17,14 +17,14 @@ MY TASKS (in this order)
 
 TASK 1: Finish the PPT in the official 6-slide InnoHack template (deadline 4:30 PM). Do NOT add slides. Keep the template's fonts and colours. Help me fit this text into each slide, cut words if a box overflows, and check for typos.
 
-Slide 1 (Title): Project title "MEDIPARSE". Subtitle "AI Hospital Bill & Insurance Reader". Team name, member names, college: I will fill. Problem statement ID: "AI Automation – 3 (Hospital Bill and Insurance Reader)".
+Slide 1 (Title): Project title "HAYARA.AI". Subtitle "AI Hospital Bill & Insurance Reader". Team name, member names, college: I will fill. Problem statement ID: "AI Automation – 3 (Hospital Bill and Insurance Reader)".
 
 Slide 2 (Problem statement + Proposed solution):
 Problem: Hospital bills and insurance papers are long, messy and different at every hospital. Staff retype them by hand, which is slow and error-prone.
 - Every hospital uses its own layout, so no fixed template works
 - Manual retyping causes wrong amounts, missed line items and rejected or delayed claims
 - Plain OCR gives raw text, not clean data, and never says when it is wrong
-Proposed solution: MediParse reads scanned bills and claim forms and returns clean, verified data ready for a spreadsheet or database.
+Proposed solution: Hayara.ai reads scanned bills and claim forms and returns clean, verified data ready for a spreadsheet or database.
 - Extract: a pretrained AI vision model pulls patient details, line-item charges, totals and claim data from any format
 - Verify: our rule engine checks the math (line items = subtotal, tax, grand total) and missing fields, with a confidence score per field
 - Review & export: only uncertain bills go to a human; one click to Excel, CSV or database
@@ -44,7 +44,7 @@ Feature 1 – Reads any format: any hospital's bill or claim form, PDF or phone 
 Feature 2 – Verifies the math: line items vs subtotal, tax and grand total, plus missing fields. AI mistakes get caught.
 Feature 3 – Confidence + review: every field gets a confidence score. Only uncertain bills go to a human.
 Feature 4 – Spreadsheet-ready: clean structured data to Excel, CSV or database in one click.
-What makes it unique: Other tools trust the AI. MediParse checks it: every number is verified by rules before it is exported.
+What makes it unique: Other tools trust the AI. Hayara.ai checks it: every number is verified by rules before it is exported.
 USP: Verified bill data in seconds instead of minutes of retyping, with a human only where it matters.
 
 Slide 6 (Impact, feasibility & future scope):

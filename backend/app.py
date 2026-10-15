@@ -1,5 +1,5 @@
-"""MediParse API. Run from the repo root:  uvicorn backend.app:app --reload
-Interactive test page: http://127.0.0.1:8000/docs
+"""Hayara.ai API + dashboard. Run from the repo root:  uvicorn backend.app:app --reload
+Dashboard: http://127.0.0.1:8000/   API test page: http://127.0.0.1:8000/docs
 """
 import csv
 import hashlib
@@ -12,6 +12,7 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
+from fastapi.staticfiles import StaticFiles
 from openpyxl import Workbook
 from pydantic import BaseModel
 
@@ -20,12 +21,12 @@ from backend.locate import locate
 from backend.validate import validate
 
 ROOT = Path(__file__).resolve().parent.parent
-DB = ROOT / "mediparse.db"
+DB = ROOT / "hayara.db"
 UPLOADS = ROOT / "data" / "uploads"
 MAX_BYTES = 20 * 1024 * 1024
 TYPES = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp", "application/pdf": ".pdf"}
 
-app = FastAPI(title="MediParse")
+app = FastAPI(title="Hayara.ai")
 # the dashboard may be served from another port during development
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
@@ -53,7 +54,7 @@ def load(conn, bill_id):
 
 
 def as_json(row):
-    return {"id": row["id"], "filename": row["filename"], "status": row["status"],
+    return {"id": row["id"], "filename": row["filename"], "mime_type": row["mime_type"], "status": row["status"],
             "created_at": row["created_at"], "data": json.loads(row["data"]),
             "issues": json.loads(row["issues"])}
 
@@ -169,7 +170,7 @@ def export(format: str = "xlsx"):
         buf = io.StringIO()
         csv.writer(buf).writerows([bill_header, *bill_rows])
         return Response(buf.getvalue(), media_type="text/csv",
-                        headers={"Content-Disposition": "attachment; filename=mediparse_bills.csv"})
+                        headers={"Content-Disposition": "attachment; filename=hayara_bills.csv"})
     if format != "xlsx":
         raise HTTPException(422, "format must be xlsx, csv or json")
 
@@ -187,4 +188,8 @@ def export(format: str = "xlsx"):
     wb.save(buf)
     return Response(buf.getvalue(),
                     media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    headers={"Content-Disposition": "attachment; filename=mediparse_export.xlsx"})
+                    headers={"Content-Disposition": "attachment; filename=hayara_export.xlsx"})
+
+
+# last, so every API route above wins over a file of the same name
+app.mount("/", StaticFiles(directory=ROOT / "frontend", html=True), name="dashboard")

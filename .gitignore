@@ -1,5 +1,5 @@
 __pycache__/
 .env
-mediparse.db
+hayara.db
 data/uploads/
 .pytest_cache/

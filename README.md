@@ -1,4 +1,4 @@
-# MediParse
+# Hayara.ai
 
 AI reads the bill. Math checks the AI. A human approves only what's uncertain.
 INNOHACKS 2.0 · AI Automation #3 (Hospital Bill and Insurance Reader). Plan: [PLAN.md](PLAN.md).

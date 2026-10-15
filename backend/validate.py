@@ -57,10 +57,10 @@ def validate(doc: dict) -> list[dict]:
 
     for name, f in doc["fields"].items():
         if str(f["value"]).strip() and f["confidence"] < MIN_CONFIDENCE:
-            flag(name, "low_confidence", f"Not sure about {name.replace('_', ' ')} ({f['confidence']:.0%})")
+            flag(name, "low_confidence", f"AI is only {f['confidence']:.0%} sure it read {name.replace('_', ' ')} correctly")
     for i, item in enumerate(items):
         if item["confidence"] < MIN_CONFIDENCE:
             flag(f"line_items.{i}", "low_confidence",
-                 f"Not sure about line '{item['description']}' ({item['confidence']:.0%})")
+                 f"AI is only {item['confidence']:.0%} sure it read line '{item['description']}' correctly")
 
     return issues
