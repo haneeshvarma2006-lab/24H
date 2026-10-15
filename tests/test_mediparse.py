@@ -69,7 +69,7 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setattr(api, "DB", tmp_path / "test.db")
     monkeypatch.setattr(api, "UPLOADS", tmp_path / "uploads")
     monkeypatch.setattr(api, "extract", lambda data, mime: copy.deepcopy(make_doc(total="5200")))
-    return TestClient(api.app)
+    return TestClient(api.app, headers={"X-Hayara": "1"})
 
 
 def test_upload_review_correct_export(client):
@@ -211,3 +211,24 @@ def test_import_cord_and_sroie_then_score(tmp_path, monkeypatch):
     monkeypatch.setattr(sys, "argv", ["x", "sroie", str(sroie)]); imp.main()
     truth = json.loads((tmp_path / "data" / "truth" / "sroie_X51.json").read_text())
     assert truth["fields"]["bill_date"]["value"] == "25/12/2018" and not truth["items_labelled"]
+
+
+def test_cross_site_writes_and_bad_totals_blocked(client):
+    plain = TestClient(api.app)  # what another website's form or no-cors fetch looks like
+    assert plain.post("/upload", files={"file": ("b.jpg", b"img", "image/jpeg")}).status_code == 403
+    assert plain.get("/bills").status_code == 200
+    assert rules(make_doc(total="illegible")) == ["required"]
+
+
+def test_export_amounts_are_numbers_and_first_ai_value_kept(client):
+    bill_id = client.post("/upload", files={"file": ("b.jpg", b"img", "image/jpeg")}).json()["id"]
+    client.patch(f"/bills/{bill_id}", json={"field": "total", "value": "3400"})
+    client.patch(f"/bills/{bill_id}", json={"field": "total", "value": "3450"})
+    with api.db() as conn:
+        assert [r[0] for r in conn.execute("SELECT ai_value FROM corrections")] == ["5200", "5200"]
+    from openpyxl import load_workbook
+    import io
+    wb = load_workbook(io.BytesIO(client.get("/export").content))
+    header = [c.value for c in wb["Bills"][1]]
+    assert wb["Bills"][2][header.index("total")].value == 3450 and wb["Bills"][2][header.index("bill_date")].data_type != "n"
+    assert wb["Line items"][2][4].value == 3000

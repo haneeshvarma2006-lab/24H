@@ -29,6 +29,8 @@ def validate(doc: dict) -> list[dict]:
     for name in required:
         if not str(fields.get(name) or "").strip():
             flag(name, "required", f"{name.replace('_', ' ').capitalize()} is missing")
+        elif name in ("total", "claimed_amount") and amount(fields[name]) is None:
+            flag(name, "required", f"{name.replace('_', ' ').capitalize()} is not a number: '{fields[name]}'")
 
     seen = set()
     for i, item in enumerate(items):

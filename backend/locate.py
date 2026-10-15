@@ -16,7 +16,7 @@ from backend.validate import amount
 # which words on the same line identify a number field ("total" also appears in "Sub Total")
 LABELS = {"subtotal": ("sub",), "discount": ("disc",), "tax": ("gst", "tax"),
           "total": ("net", "payable", "grand"), "claimed_amount": ("claim",),
-          "bill_date": ("bill", "date"), "admission_date": ("adm",), "discharge_date": ("disch",)}
+          "bill_date": ("bill", "invoice"), "admission_date": ("adm",), "discharge_date": ("disch",)}
 
 
 def ocr_words(data: bytes, psm: str) -> list[dict]:
@@ -84,7 +84,8 @@ def locate(data: bytes, doc: dict) -> dict:
     pos = 0
     for n, item in enumerate(doc["line_items"]):
         # first 2 words of the description: OCR often mangles brackets and units after that
-        hits = matches(words, " ".join(item["description"].split()[:2]), pos)
+        desc = " ".join(item["description"].split()[:2])
+        hits = matches(words, desc, pos) if desc else []
         if hits:
             row = [w["box"] for w in words if w["line"] == words[hits[0]]["line"]]
             sources[f"line_items.{n}"] = union(row, size)

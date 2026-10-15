@@ -26,7 +26,7 @@ duplicated medicine, `bill_04` clean pharmacy bill, `bill_05_photo` tilted/blurr
 
 | Endpoint | What it does |
 |---|---|
-| `POST /upload` (form field `file`) | Extract + validate a JPG/PNG/WEBP/PDF. Returns `{id, status, data, issues}` |
+| `POST /upload` (form field `file`; every POST/PATCH needs header `X-Hayara: 1`) | Extract + validate a JPG/PNG/WEBP/PDF. Returns `{id, status, data, issues}` |
 | `GET /bills?status=review` | List bills (`review` or `approved`, or all) |
 | `GET /bills/{id}` | One bill: `data.fields`, `data.line_items`, `issues` |
 | `GET /bills/{id}/file` | The original scan, for the side-by-side viewer |

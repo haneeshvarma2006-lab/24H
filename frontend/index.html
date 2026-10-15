@@ -229,7 +229,7 @@ function toast(text, kind = '') {
 }
 
 async function api(path, options = {}) {
-  const res = await fetch(path, options);
+  const res = await fetch(path, { ...options, headers: { ...options.headers, 'X-Hayara': '1' } });
   const body = (res.headers.get('content-type') || '').includes('json') ? await res.json() : null;
   if (!res.ok) {
     const detail = body && body.detail;
@@ -366,7 +366,10 @@ function renderDetail() {
 function highlight(key) {
   const src = srcKey(key);
   for (const box of main.querySelectorAll('.box.active')) box.classList.remove('active');
-  const box = main.querySelector(`.box[data-src="${src}"]`);
+  const box = main.querySelector(`.box[data-src="${src}"]`), note = main.querySelector('#viewer .note');
+  if (note && main.querySelector('.box'))
+    note.textContent = box ? 'Hover or click a field to see where it was read on the scan.'
+                           : `${label(key)} could not be found on the scan image. Check it by eye.`;
   if (!box) return;
   box.classList.add('active');
   const viewer = $('#viewer'), r = box.getBoundingClientRect(), v = viewer.getBoundingClientRect();
@@ -383,9 +386,12 @@ function focusField(key) {
 
 let pointerDown = false;
 addEventListener('pointerdown', () => pointerDown = true, true);
-addEventListener('pointerup', () => pointerDown = false, true);
+for (const type of ['pointerup', 'pointercancel']) addEventListener(type, () => pointerDown = false, true);
 // re-rendering between mousedown and mouseup swallows the click, so wait until the button is released
-const afterRelease = () => pointerDown && new Promise(r => addEventListener('pointerup', () => setTimeout(r), { once: true }));
+const afterRelease = () => pointerDown && new Promise(r => {
+  const done = () => { removeEventListener('pointerup', done); removeEventListener('pointercancel', done); setTimeout(r); };
+  addEventListener('pointerup', done); addEventListener('pointercancel', done);
+});
 
 async function select(id) {
   document.activeElement?.blur();  // an unsaved edit fires its change now, while `current` is still its own bill
@@ -424,7 +430,8 @@ function save(input, force = false) {
       current = updated;
       renderDetail();
       scrollers().forEach((el, i) => el && (el.scrollTop = scroll[i]));
-      const el = focused && main.querySelector(`input[data-key="${focused}"]`);
+      // focus was on something the re-render replaced (an issue, a section header): go back to the saved field
+      const el = main.querySelector(`input[data-key="${focused || key}"]`);
       if (el) {
         el.focus({ preventScroll: true });
         if (focused === active?.dataset?.key && sel[0] != null) el.setSelectionRange(sel[0], sel[1]);
@@ -523,8 +530,6 @@ main.addEventListener('click', async e => {
   const issue = e.target.closest('.issue');
   if (issue) {
     focusField(issue.dataset.target);
-    if (main.querySelector('.box') && !main.querySelector(`.box[data-src="${srcKey(issue.dataset.target)}"]`))
-      toast(`${label(issue.dataset.target)} was not found on the scan image. Check the scan by eye.`);
     return;
   }
   const box = e.target.closest('.box');

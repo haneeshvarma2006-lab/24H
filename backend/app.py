@@ -7,6 +7,7 @@ import hashlib
 import io
 import json
 import os
+import re
 import secrets
 import shutil
 import sqlite3
@@ -21,7 +22,7 @@ from pydantic import BaseModel
 
 from backend.extract import FIELDS, extract
 from backend.locate import locate
-from backend.validate import validate
+from backend.validate import amount, validate
 
 ROOT = Path(__file__).resolve().parent.parent
 DB = ROOT / "hayara.db"
@@ -43,6 +44,9 @@ async def require_password(request: Request, call_next):
             given = b""
         if not secrets.compare_digest(given, password.encode()):
             return Response(status_code=401, headers={"WWW-Authenticate": 'Basic realm="Hayara.ai"'})
+    # other websites can still fire simple cross-site POSTs; a custom header forces a CORS preflight they fail
+    if request.method in ("POST", "PATCH") and request.headers.get("x-hayara") != "1":
+        return Response("Missing X-Hayara header", status_code=403)
     return await call_next(request)
 
 
@@ -156,12 +160,15 @@ def correct(bill_id: int, fix: Correction):
             target, key = doc["line_items"][int(parts[1])], parts[2]
         else:
             raise HTTPException(422, f"Unknown field '{fix.field}'")
+        first = conn.execute("SELECT ai_value FROM corrections WHERE bill_id = ? AND field = ? ORDER BY id LIMIT 1",
+                             (bill_id, fix.field)).fetchone()  # keep what the AI said, not a human's earlier edit
         conn.execute("INSERT INTO corrections (bill_id, field, ai_value, corrected_value) VALUES (?, ?, ?, ?)",
-                     (bill_id, fix.field, target[key], fix.value))
+                     (bill_id, fix.field, first[0] if first else target[key], fix.value))
         target[key], target["confidence"] = fix.value, 1.0  # a human checked it
         issues = validate(doc)
         # a reviewer's approval survives edits unless the edit creates a new problem
-        kept = row["status"] == "approved" and all(i in json.loads(row["issues"]) for i in issues)
+        approved_issues = {(i["field"], i["rule"]) for i in json.loads(row["issues"])}
+        kept = row["status"] == "approved" and all((i["field"], i["rule"]) in approved_issues for i in issues)
         conn.execute("UPDATE bills SET data = ?, issues = ?, status = ? WHERE id = ?",
                      (json.dumps(doc), json.dumps(issues), "approved" if kept or not issues else "review", bill_id))
         return as_json(load(conn, bill_id))
@@ -184,6 +191,10 @@ def export(format: str = "xlsx"):
     if format == "json":
         return docs
 
+    def number(v):
+        """Amounts go to Excel as numbers so SUM works; anything else stays text."""
+        return amount(v) if isinstance(v, str) and re.fullmatch(r"-?[\d,]+(\.\d+)?", v.strip()) else cell(v)
+
     def cell(v):
         """Text from scans and filenames must stay text: no Excel formulas, no characters that break xlsx."""
         if not isinstance(v, str):
@@ -205,13 +216,15 @@ def export(format: str = "xlsx"):
     wb = Workbook()
     ws = wb.active
     ws.title = "Bills"
-    for r in [bill_header, *bill_rows]:
-        ws.append(r)
+    money = {bill_header.index(f) for f in ("subtotal", "discount", "tax", "total", "claimed_amount")}
+    ws.append(bill_header)
+    for r in bill_rows:
+        ws.append([number(v) if i in money else v for i, v in enumerate(r)])
     items = wb.create_sheet("Line items")
     items.append(["bill_id", "description", "qty", "rate", "amount"])
     for d in docs:
         for i in d["data"]["line_items"]:
-            items.append([cell(v) for v in (d["id"], i["description"], i["qty"], i["rate"], i["amount"])])
+            items.append([d["id"], cell(i["description"]), *(number(i[c]) for c in ("qty", "rate", "amount"))])
     buf = io.BytesIO()
     wb.save(buf)
     return Response(buf.getvalue(),

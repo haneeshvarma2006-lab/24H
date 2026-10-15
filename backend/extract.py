@@ -82,5 +82,8 @@ def extract(data: bytes, mime_type: str, use_cache: bool = True) -> dict:
     result = Extraction.model_validate_json(response.text).model_dump()
 
     CACHE.mkdir(parents=True, exist_ok=True)
-    cached.write_text(json.dumps(result, indent=2, ensure_ascii=False))
+    # ASCII-only JSON (Windows default encoding can't write ₹ or Hindi), via a temp file so a crash never leaves a broken entry
+    tmp = cached.with_suffix(".tmp")
+    tmp.write_text(json.dumps(result, indent=2))
+    os.replace(tmp, cached)
     return result
