@@ -38,7 +38,7 @@ app = FastAPI(title="Hayara.ai")
 async def require_password(request: Request, call_next):
     """When hosted, one shared password (APP_PASSWORD) keeps strangers from spending the Gemini quota."""
     password = os.environ.get("APP_PASSWORD")
-    if password:
+    if password and request.url.path != "/health":  # uptime pinger keeps the free server awake without the password
         try:
             given = base64.b64decode(request.headers.get("authorization", "").removeprefix("Basic ")).partition(b":")[2]
         except ValueError:
@@ -90,6 +90,11 @@ def as_json(row):
 
 
 # plain def: FastAPI runs it in a thread, so slow Gemini/Tesseract calls don't freeze other requests
+@app.get("/health")
+def health():
+    return {"ok": True}
+
+
 @app.post("/upload")
 def upload(file: UploadFile):
     if file.content_type not in TYPES:

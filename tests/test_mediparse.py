@@ -125,6 +125,7 @@ def test_password_protects_hosted_app(client, monkeypatch):
     monkeypatch.setenv("APP_PASSWORD", "judges2026")
     assert client.get("/bills").status_code == 401
     assert client.get("/").status_code == 401
+    assert client.get("/health").json() == {"ok": True}
     bad = base64.b64encode(b"x:wrong").decode()
     assert client.get("/bills", headers={"Authorization": f"Basic {bad}"}).status_code == 401
     assert client.get("/bills", headers={"Authorization": "Basic !!notbase64"}).status_code == 401
