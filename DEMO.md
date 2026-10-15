@@ -19,7 +19,7 @@ Open http://127.0.0.1:8001/ . Keep `D:\24H\data\samples` open in Explorer. Charg
 | Validation | 4 documents with planted mistakes | **4/4 caught**: wrong total, missing name + duplicate medicine, qty×rate error, over-claim |
 | Validation | 4 clean documents | **4/4 auto-approved** |
 
-Honest limits: tested on our 9 demo documents; the free Gemini tier allows 20 calls/day, so the CORD/SROIE benchmark was not run.
+Honest limits: Gemini and local-mode numbers come from our 9 demo documents (the free Gemini tier allows 20 calls/day, so Gemini was not benchmarked on SROIE); the trained-model numbers come from SROIE shop receipts, not hospital bills.
 
 ## Results slide text
 **Title:** Results
