@@ -180,3 +180,8 @@ Every leaf field is `{"value": ..., "confidence": 0.0-1.0}`.
 4. Required fields present: patient.name, hospital.name, bill_date, total
 5. No duplicate line items (same description + amount)
 6. Any field with confidence < 0.8 → review queue
+
+### Long-term path (answer to "isn't a pretrained API temporary?")
+- Every reviewer correction is saved (scan, field, AI value, corrected value) in a `corrections` table. **Build this in the MVP**: it is one table.
+- Those corrections become labelled Indian hospital-bill data. Once there are enough, fine-tune a model on them.
+- `extract.py` is the only file that knows which model is used, so switching to a self-hosted open-source model for privacy or cost is a one-file change.
