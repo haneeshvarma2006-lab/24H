@@ -120,17 +120,10 @@ def test_eval_compare_counts_mistakes():
     assert r["wrong"] == ["total"] and r["items_ok"] == r["items"] - 1 and not r["verdict_ok"]
 
 
-def test_password_protects_hosted_app(client, monkeypatch):
-    import base64
-    monkeypatch.setenv("APP_PASSWORD", "judges2026")
-    assert client.get("/bills").status_code == 401
-    assert client.get("/").status_code == 401
+def test_app_is_open_without_password(client, monkeypatch):
+    monkeypatch.setenv("APP_PASSWORD", "old-setting")  # a leftover Render variable must not lock the demo
+    assert client.get("/bills").status_code == 200
     assert client.get("/health").json() == {"ok": True}
-    bad = base64.b64encode(b"x:wrong").decode()
-    assert client.get("/bills", headers={"Authorization": f"Basic {bad}"}).status_code == 401
-    assert client.get("/bills", headers={"Authorization": "Basic !!notbase64"}).status_code == 401
-    good = base64.b64encode(b"anyone:judges2026").decode()
-    assert client.get("/bills", headers={"Authorization": f"Basic {good}"}).status_code == 200
 
 
 def test_blank_rows_are_not_duplicates_and_do_not_crash():

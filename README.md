@@ -54,7 +54,6 @@ The repo has a `Dockerfile` (Python + Tesseract) and a Render blueprint (`render
 1. Sign in at **render.com** with GitHub → **New → Blueprint** → pick this repo and branch.
 2. When asked, type the secrets into Render (never into the code):
    - `GEMINI_API_KEY`: your Gemini key
-   - `APP_PASSWORD`: any password. The browser asks for it (any username), so strangers can't use up your Gemini quota.
 3. Wait for the build (~5 min). Your link is `https://hayara-ai-xxxx.onrender.com`.
 
 Free-plan limits: the app sleeps after ~15 min idle (first visit then takes ~1 min to wake, so open it before judging),

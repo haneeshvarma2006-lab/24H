@@ -7,5 +7,3 @@ services:
     envVars:
       - key: EXTRACTOR        # fully local OCR + trained model: no AI quota needed online
         value: local
-      - key: APP_PASSWORD     # browser asks for it (any username); keeps strangers out
-        sync: false

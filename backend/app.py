@@ -1,14 +1,12 @@
 """Hayara.ai API + dashboard. Run from the repo root:  uvicorn backend.app:app --reload
 Dashboard: http://127.0.0.1:8000/   API test page: http://127.0.0.1:8000/docs
 """
-import base64
 import csv
 import hashlib
 import io
 import json
 import os
 import re
-import secrets
 import shutil
 import sqlite3
 from pathlib import Path
@@ -35,16 +33,7 @@ app = FastAPI(title="Hayara.ai")
 
 
 @app.middleware("http")
-async def require_password(request: Request, call_next):
-    """When hosted, one shared password (APP_PASSWORD) keeps strangers from spending the Gemini quota."""
-    password = os.environ.get("APP_PASSWORD")
-    if password and request.url.path != "/health":  # uptime pinger keeps the free server awake without the password
-        try:
-            given = base64.b64decode(request.headers.get("authorization", "").removeprefix("Basic ")).partition(b":")[2]
-        except ValueError:
-            given = b""
-        if not secrets.compare_digest(given, password.encode()):
-            return Response(status_code=401, headers={"WWW-Authenticate": 'Basic realm="Hayara.ai"'})
+async def require_header(request: Request, call_next):
     # other websites can still fire simple cross-site POSTs; a custom header forces a CORS preflight they fail
     if request.method in ("POST", "PATCH") and request.headers.get("x-hayara") != "1":
         return Response("Missing X-Hayara header", status_code=403)
