@@ -32,10 +32,10 @@ Honest limits: Gemini and local-mode numbers come from our 9 demo documents (the
 ## 3-minute live demo
 1. **Click "▶ Try the demo bills"** on the start page (or Ctrl+A in data/samples and drop them). Loads in seconds: for these 9 the engine's output is saved (the free server has ~0.1 CPU). To show live reading, upload any other bill or a phone photo (~30-60 s on Render, ~3 s on the laptop). *"Any hospital, any layout: scan, phone photo, PDF."*
 2. **bill_01 → Approved, trust ring 100%.** Hover fields: *"Click-to-source: every value is shown where it was read."* Point at the top: *"Read → Math checked → Verified → Export. 'No human needed' shows how much we automate."*
-3. **bill_02 → wrong total.** *"The bill says ₹6,530, the items add up to ₹5,730. The AI read it right; the math caught the hospital's mistake."* Click the issue → type 5730 → Enter → Approved → **Review next →** jumps to the next bill in the queue.
+3. **bill_02 → wrong total.** *"The bill says ₹6,530, the items add up to ₹5,730. The AI read it right; the math caught the hospital's mistake."* Click the issue → type 5730 → Enter → Approved (top bar: **fixes → training data** goes up by 1: *"every human fix becomes training data for our model"*) → **Review next →** jumps to the next bill in the queue.
 4. **bill_03 →** missing patient name + same medicine billed twice.
 5. **bill_06 →** *"HbA1c: 2 × 400 = 800, bill says 900."*
-6. **claim_02 →** *"The insurance claim asks ₹6,530 but the matching bill supports ₹5,730. We protect the insurer from over-claims."*
+6. **claim_02 →** *"The insurance claim asks ₹6,530 but the matching bill supports ₹5,730. We protect the insurer from over-claims."* Click **Open the matching bill →** to jump to it.
 7. **Excel export.** *"Clean, verified data ready for any hospital or TPA system."*
 8. Close: *"AI reads the bill. Math checks the AI. A human approves only what's uncertain."*
 
