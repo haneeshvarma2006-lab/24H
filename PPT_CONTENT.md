@@ -4,7 +4,7 @@ Each heading below is a box in the official template. Paste the text into that b
 Text in [brackets] is for you to fill in.
 
 ## Slide 1: Title
-- **Project title:** CLAIMLENS
+- **Project title:** MEDIPARSE
 - **Subtitle (optional, under the title):** AI Hospital Bill & Insurance Reader
 - **Team name:** [Team name]
 - **Team members:** [Member 1, Member 2, Member 3, Member 4]
@@ -21,7 +21,7 @@ Hospital Bill and Insurance Reader: hospital bills and insurance papers are long
 - Plain OCR gives raw text, not clean data, and never says when it is wrong
 
 **Proposed solution box:**
-ClaimLens reads scanned bills and claim forms and returns clean, verified data ready for a spreadsheet or database.
+MediParse reads scanned bills and claim forms and returns clean, verified data ready for a spreadsheet or database.
 - **Extract:** a pretrained AI vision model pulls patient details, line-item charges, totals and claim data from any format
 - **Verify:** our rule engine checks the math (line items = subtotal, tax, grand total) and missing fields, with a confidence score per field
 - **Review & export:** only uncertain bills go to a human; one click to Excel, CSV or a database
@@ -58,7 +58,7 @@ Draw 5 boxes left to right, joined by arrows:
 - **Feature 4, Spreadsheet-ready:** clean structured data to Excel, CSV or a database in one click. Click any value to see where it was read on the scan.
 
 **What makes your solution unique?**
-Other tools trust the AI. ClaimLens checks it: every number is verified by rules before it is exported.
+Other tools trust the AI. MediParse checks it: every number is verified by rules before it is exported.
 
 **Your unique selling point:**
 Verified bill data in seconds instead of minutes of retyping, with a human only where it matters.

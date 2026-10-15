@@ -1,7 +1,7 @@
 # INNOHACKS 2.0: Hospital Bill & Insurance Reader
 
 **Problem statement:** AI Automation #3, Hospital Bill and Insurance Reader
-**Working name:** ClaimLens
+**Working name:** MediParse
 **Pitch:** *"AI reads the bill. Math checks the AI. A human approves only what's uncertain."*
 
 ---
