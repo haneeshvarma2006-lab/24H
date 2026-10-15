@@ -41,7 +41,7 @@ claim_02 is flagged ("Claimed ₹6,530, but the matching bill adds up to ₹5,73
 | `PATCH /bills/{id}` `{"field": "total", "value": "3450"}` | Human fix (also `line_items.2.amount`). Re-validates; saved as a correction |
 | `POST /bills/{id}/approve` | Reviewer accepts the bill as is |
 | `GET /export?format=xlsx\|csv\|json` | Spreadsheet-ready export |
-| `GET /samples`, `GET /samples/{name}` | The 9 fictitious demo documents (the start page's "Try the demo bills" button) |
+| `GET /samples`, `GET /samples/{name}` | The 9 fictitious demo documents (the start page's "Try the demo bills" button; the engine's output for them is saved in `data/demo_cache/` by `scripts/precompute_demo.py`, every other upload is read live) |
 | `GET /health` | `{"ok": true}` for uptime monitors |
 
 Every issue is `{"field", "rule", "message"}`; `field` matches a key in `data.fields` or `line_items.N`, so the UI can highlight it.

@@ -80,6 +80,7 @@ def test_rounding_tolerance():
 def client(tmp_path, monkeypatch):
     monkeypatch.setattr(api, "DB", tmp_path / "test.db")
     monkeypatch.setattr(api, "UPLOADS", tmp_path / "uploads")
+    monkeypatch.setattr(api, "DEMO_CACHE", tmp_path / "no_demo_cache")  # tests read live
     monkeypatch.setattr(api, "extract", lambda data, mime: copy.deepcopy(make_doc(total="5200")))
     return TestClient(api.app, headers={"X-Hayara": "1"})
 
@@ -392,3 +393,17 @@ def test_demo_samples_are_listed_and_served_safely(client):
     assert client.get("/samples/bill_07.pdf").headers["content-type"] == "application/pdf"
     for bad in ["..%2Fhayara.db", "sroie_X51.jpg", "bill_01.png.exe", "%2Fetc%2Fpasswd"]:
         assert client.get(f"/samples/{bad}").status_code == 404
+
+
+def test_demo_documents_load_from_saved_engine_output(client, monkeypatch):
+    import hashlib
+    root = Path(__file__).resolve().parent.parent
+    monkeypatch.setattr(api, "DEMO_CACHE", root / "data" / "demo_cache")
+    monkeypatch.setattr(api, "read", lambda *a: pytest.fail("demo documents must not be re-read"))
+    expected = {"bill_01.png": "approved", "bill_02.png": "review", "bill_07.pdf": "approved", "claim_02.png": "review"}
+    for name, status in expected.items():
+        data = (root / "data" / "samples" / name).read_bytes()
+        assert (root / "data" / "demo_cache" / f"{hashlib.sha256(data).hexdigest()}.json").exists(), f"rerun scripts/precompute_demo.py ({name})"
+        r = client.post("/upload", files={"file": (name, data, "application/pdf" if name.endswith(".pdf") else "image/png")}).json()
+        assert r["status"] == status and r["data"]["engine"] == "local OCR (precomputed demo)" and r["data"]["sources"]
+    assert client.get("/bills/3/preview").headers["content-type"] == "image/png"  # the PDF still gets its page image

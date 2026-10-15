@@ -1,0 +1,228 @@
+{
+ "document_type": "bill",
+ "fields": {
+  "patient_name": {
+   "value": "Kiran Rao",
+   "confidence": 0.95
+  },
+  "uhid": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "age": {
+   "value": "51",
+   "confidence": 0.95
+  },
+  "gender": {
+   "value": "Male",
+   "confidence": 0.95
+  },
+  "hospital_name": {
+   "value": "Precision Diagnostics",
+   "confidence": 0.88
+  },
+  "hospital_address": {
+   "value": "7 Station Road, Tirupati 517501",
+   "confidence": 0.96
+  },
+  "doctor": {
+   "value": "Dr. P. Shah",
+   "confidence": 0.94
+  },
+  "bill_no": {
+   "value": "PD-2291",
+   "confidence": 0.95
+  },
+  "bill_date": {
+   "value": "13-10-2026",
+   "confidence": 0.95
+  },
+  "admission_date": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "discharge_date": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "subtotal": {
+   "value": "3300.00",
+   "confidence": 0.96
+  },
+  "discount": {
+   "value": "0.00",
+   "confidence": 0.96
+  },
+  "tax": {
+   "value": "0.00",
+   "confidence": 0.97
+  },
+  "total": {
+   "value": "3300.00",
+   "confidence": 0.95
+  },
+  "insurer": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "tpa": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "policy_no": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "claim_no": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "claimed_amount": {
+   "value": "",
+   "confidence": 1.0
+  }
+ },
+ "line_items": [
+  {
+   "description": "Complete Blood Count",
+   "qty": "1",
+   "rate": "450.00",
+   "amount": "450.00",
+   "confidence": 0.96
+  },
+  {
+   "description": "Thyroid Profile",
+   "qty": "1",
+   "rate": "650.00",
+   "amount": "650.00",
+   "confidence": 0.96
+  },
+  {
+   "description": "Vitamin D (25-OH)",
+   "qty": "1",
+   "rate": "1200.00",
+   "amount": "1200.00",
+   "confidence": 0.95
+  },
+  {
+   "description": "HbA1c",
+   "qty": "2",
+   "rate": "400.00",
+   "amount": "900.00",
+   "confidence": 0.79
+  },
+  {
+   "description": "Home Sample Collection",
+   "qty": "1",
+   "rate": "100.00",
+   "amount": "100.00",
+   "confidence": 0.97
+  }
+ ],
+ "engine": "local OCR (precomputed demo)",
+ "sources": {
+  "patient_name": [
+   0.1306,
+   0.2129,
+   0.095,
+   0.0108
+  ],
+  "age": [
+   0.5856,
+   0.2133,
+   0.0228,
+   0.0104
+  ],
+  "gender": [
+   0.6167,
+   0.2133,
+   0.0456,
+   0.0104
+  ],
+  "hospital_name": [
+   0.0833,
+   0.0379,
+   0.425,
+   0.0262
+  ],
+  "hospital_address": [
+   0.0811,
+   0.0817,
+   0.2983,
+   0.0138
+  ],
+  "doctor": [
+   0.1878,
+   0.2371,
+   0.1044,
+   0.0108
+  ],
+  "bill_no": [
+   0.1256,
+   0.1892,
+   0.0822,
+   0.0104
+  ],
+  "bill_date": [
+   0.5561,
+   0.1892,
+   0.1106,
+   0.0104
+  ],
+  "subtotal": [
+   0.8578,
+   0.4642,
+   0.0767,
+   0.0112
+  ],
+  "discount": [
+   0.8972,
+   0.4883,
+   0.0372,
+   0.0104
+  ],
+  "tax": [
+   0.8972,
+   0.5125,
+   0.0372,
+   0.0104
+  ],
+  "total": [
+   0.8272,
+   0.5392,
+   0.1072,
+   0.015
+  ],
+  "line_items.0": [
+   0.0678,
+   0.3088,
+   0.8656,
+   0.0133
+  ],
+  "line_items.1": [
+   0.0667,
+   0.3371,
+   0.8667,
+   0.0133
+  ],
+  "line_items.2": [
+   0.0667,
+   0.3654,
+   0.8667,
+   0.0121
+  ],
+  "line_items.3": [
+   0.0661,
+   0.3937,
+   0.8672,
+   0.0108
+  ],
+  "line_items.4": [
+   0.0667,
+   0.4221,
+   0.8667,
+   0.0133
+  ]
+ },
+ "preview": false
+}

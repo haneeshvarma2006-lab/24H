@@ -543,13 +543,12 @@ function approve() {
   saving = saving.then(async () => {  // after any pending edit, so the approval sees the latest data
     try {
       const b = await api(`/bills/${id}/approve`, { method: 'POST' });
+      await loadBills();  // counters and the bill flip to Approved together
       if (current && current.id === id) {
         current = b;
         renderDetail();
         main.querySelector('.bar h1').focus();
       }
-      await loadBills();
-      if (current && current.id === id) renderDetail();
       toast('Approved. Ready for export.', 'good');
     } catch (e) { toast(e.message, 'error'); }
   });

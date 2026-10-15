@@ -1,0 +1,258 @@
+{
+ "document_type": "bill",
+ "fields": {
+  "patient_name": {
+   "value": "Lakshmi Devi",
+   "confidence": 0.95
+  },
+  "uhid": {
+   "value": "AC-20517",
+   "confidence": 0.95
+  },
+  "age": {
+   "value": "62",
+   "confidence": 0.94
+  },
+  "gender": {
+   "value": "Female",
+   "confidence": 0.94
+  },
+  "hospital_name": {
+   "value": "Arogya Care Hospital",
+   "confidence": 0.98
+  },
+  "hospital_address": {
+   "value": "12 Gandhi Road, Tirupati 517501",
+   "confidence": 0.95
+  },
+  "doctor": {
+   "value": "Dr. S. Reddy",
+   "confidence": 0.95
+  },
+  "bill_no": {
+   "value": "INV-5534",
+   "confidence": 0.94
+  },
+  "bill_date": {
+   "value": "11-10-2026",
+   "confidence": 0.95
+  },
+  "admission_date": {
+   "value": "09-10-2026",
+   "confidence": 0.96
+  },
+  "discharge_date": {
+   "value": "11-10-2026",
+   "confidence": 0.96
+  },
+  "subtotal": {
+   "value": "5730.00",
+   "confidence": 0.97
+  },
+  "discount": {
+   "value": "0.00",
+   "confidence": 0.96
+  },
+  "tax": {
+   "value": "0.00",
+   "confidence": 0.96
+  },
+  "total": {
+   "value": "6530.00",
+   "confidence": 0.95
+  },
+  "insurer": {
+   "value": "Suraksha Health",
+   "confidence": 0.94
+  },
+  "tpa": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "policy_no": {
+   "value": "P-9031-2208",
+   "confidence": 0.94
+  },
+  "claim_no": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "claimed_amount": {
+   "value": "",
+   "confidence": 1.0
+  }
+ },
+ "line_items": [
+  {
+   "description": "Room Rent (General Ward)",
+   "qty": "2",
+   "rate": "1500.00",
+   "amount": "3000.00",
+   "confidence": 0.96
+  },
+  {
+   "description": "Doctor Consultation",
+   "qty": "2",
+   "rate": "500.00",
+   "amount": "1000.00",
+   "confidence": 0.97
+  },
+  {
+   "description": "ECG",
+   "qty": "1",
+   "rate": "350.00",
+   "amount": "350.00",
+   "confidence": 0.96
+  },
+  {
+   "description": "Lipid Profile",
+   "qty": "1",
+   "rate": "900.00",
+   "amount": "900.00",
+   "confidence": 0.97
+  },
+  {
+   "description": "Nursing Charges",
+   "qty": "2",
+   "rate": "240.00",
+   "amount": "480.00",
+   "confidence": 0.97
+  }
+ ],
+ "engine": "local OCR (precomputed demo)",
+ "sources": {
+  "patient_name": [
+   0.1889,
+   0.1971,
+   0.1306,
+   0.0108
+  ],
+  "uhid": [
+   0.5572,
+   0.1975,
+   0.095,
+   0.0104
+  ],
+  "age": [
+   0.1856,
+   0.2217,
+   0.0217,
+   0.0104
+  ],
+  "gender": [
+   0.2294,
+   0.2217,
+   0.0694,
+   0.0104
+  ],
+  "hospital_name": [
+   0.2878,
+   0.0379,
+   0.4217,
+   0.0262
+  ],
+  "hospital_address": [
+   0.2489,
+   0.0817,
+   0.3094,
+   0.0138
+  ],
+  "doctor": [
+   0.165,
+   0.2696,
+   0.1206,
+   0.0133
+  ],
+  "bill_no": [
+   0.57,
+   0.2217,
+   0.0889,
+   0.0104
+  ],
+  "bill_date": [
+   0.5889,
+   0.27,
+   0.1106,
+   0.0104
+  ],
+  "admission_date": [
+   0.1589,
+   0.2458,
+   0.1122,
+   0.0104
+  ],
+  "discharge_date": [
+   0.6028,
+   0.2458,
+   0.1106,
+   0.0104
+  ],
+  "subtotal": [
+   0.8578,
+   0.5208,
+   0.0767,
+   0.0112
+  ],
+  "discount": [
+   0.8972,
+   0.545,
+   0.0372,
+   0.0104
+  ],
+  "tax": [
+   0.8972,
+   0.5692,
+   0.0372,
+   0.0104
+  ],
+  "total": [
+   0.8272,
+   0.5958,
+   0.1072,
+   0.015
+  ],
+  "insurer": [
+   0.1306,
+   0.2938,
+   0.1628,
+   0.0108
+  ],
+  "policy_no": [
+   0.5939,
+   0.2942,
+   0.1239,
+   0.0104
+  ],
+  "line_items.0": [
+   0.0678,
+   0.3654,
+   0.8656,
+   0.0121
+  ],
+  "line_items.1": [
+   0.0667,
+   0.3937,
+   0.8667,
+   0.0117
+  ],
+  "line_items.2": [
+   0.0667,
+   0.4225,
+   0.8667,
+   0.0104
+  ],
+  "line_items.3": [
+   0.0661,
+   0.4504,
+   0.8672,
+   0.0133
+  ],
+  "line_items.4": [
+   0.0667,
+   0.4792,
+   0.8667,
+   0.0129
+  ]
+ },
+ "preview": false
+}

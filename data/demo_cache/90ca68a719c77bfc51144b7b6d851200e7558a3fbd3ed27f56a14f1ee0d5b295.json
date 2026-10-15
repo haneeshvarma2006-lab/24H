@@ -1,0 +1,210 @@
+{
+ "document_type": "bill",
+ "fields": {
+  "patient_name": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "uhid": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "age": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "gender": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "hospital_name": {
+   "value": "Sanjeevani Medicals",
+   "confidence": 0.93
+  },
+  "hospital_address": {
+   "value": "4 Bazaar Street, Tirupati 517501",
+   "confidence": 0.97
+  },
+  "doctor": {
+   "value": "Dr. K. Rao",
+   "confidence": 0.95
+  },
+  "bill_no": {
+   "value": "SM-0912",
+   "confidence": 0.95
+  },
+  "bill_date": {
+   "value": "12-10-2026",
+   "confidence": 0.95
+  },
+  "admission_date": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "discharge_date": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "subtotal": {
+   "value": "562.00",
+   "confidence": 0.97
+  },
+  "discount": {
+   "value": "28.00",
+   "confidence": 0.96
+  },
+  "tax": {
+   "value": "27.00",
+   "confidence": 0.96
+  },
+  "total": {
+   "value": "561.00",
+   "confidence": 0.94
+  },
+  "insurer": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "tpa": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "policy_no": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "claim_no": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "claimed_amount": {
+   "value": "",
+   "confidence": 1.0
+  }
+ },
+ "line_items": [
+  {
+   "description": "Paracetamol 650mg (10 tabs)",
+   "qty": "2",
+   "rate": "32.00",
+   "amount": "64.00",
+   "confidence": 0.96
+  },
+  {
+   "description": "Pantoprazole 40mg (15 tabs)",
+   "qty": "1",
+   "rate": "145.00",
+   "amount": "145.00",
+   "confidence": 0.96
+  },
+  {
+   "description": "Amoxicillin 500mg (10 caps)",
+   "qty": "1",
+   "rate": "98.00",
+   "amount": "98.00",
+   "confidence": 0.96
+  },
+  {
+   "description": "Pantoprazole 40mg (15 tabs)",
+   "qty": "1",
+   "rate": "145.00",
+   "amount": "145.00",
+   "confidence": 0.96
+  },
+  {
+   "description": "ORS Sachet",
+   "qty": "5",
+   "rate": "22.00",
+   "amount": "110.00",
+   "confidence": 0.95
+  }
+ ],
+ "engine": "local OCR (precomputed demo)",
+ "sources": {
+  "hospital_name": [
+   0.0822,
+   0.0379,
+   0.4039,
+   0.0262
+  ],
+  "hospital_address": [
+   0.0806,
+   0.0817,
+   0.3067,
+   0.0138
+  ],
+  "doctor": [
+   0.1878,
+   0.2375,
+   0.0967,
+   0.0104
+  ],
+  "bill_no": [
+   0.1256,
+   0.1892,
+   0.0844,
+   0.0104
+  ],
+  "bill_date": [
+   0.5561,
+   0.1892,
+   0.1106,
+   0.0104
+  ],
+  "subtotal": [
+   0.8744,
+   0.4642,
+   0.06,
+   0.0104
+  ],
+  "discount": [
+   0.8856,
+   0.4883,
+   0.0489,
+   0.0104
+  ],
+  "tax": [
+   0.8856,
+   0.5125,
+   0.0489,
+   0.0104
+  ],
+  "total": [
+   0.8511,
+   0.5392,
+   0.0833,
+   0.0129
+  ],
+  "line_items.0": [
+   0.0678,
+   0.3088,
+   0.8656,
+   0.0133
+  ],
+  "line_items.1": [
+   0.0667,
+   0.3375,
+   0.8667,
+   0.0129
+  ],
+  "line_items.2": [
+   0.0667,
+   0.3654,
+   0.8667,
+   0.0133
+  ],
+  "line_items.3": [
+   0.0661,
+   0.3942,
+   0.8672,
+   0.0129
+  ],
+  "line_items.4": [
+   0.0667,
+   0.4221,
+   0.8667,
+   0.0108
+  ]
+ },
+ "preview": false
+}

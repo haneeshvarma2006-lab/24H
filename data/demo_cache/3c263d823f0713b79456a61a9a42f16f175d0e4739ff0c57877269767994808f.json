@@ -1,0 +1,233 @@
+{
+ "document_type": "bill",
+ "fields": {
+  "patient_name": {
+   "value": "Arjun Naidu",
+   "confidence": 0.99
+  },
+  "uhid": {
+   "value": "AC-20602",
+   "confidence": 0.99
+  },
+  "age": {
+   "value": "38",
+   "confidence": 0.99
+  },
+  "gender": {
+   "value": "Male",
+   "confidence": 0.99
+  },
+  "hospital_name": {
+   "value": "Arogya Care Hospital",
+   "confidence": 0.98
+  },
+  "hospital_address": {
+   "value": "12 Gandhi Road, Tirupati 517501",
+   "confidence": 0.99
+  },
+  "doctor": {
+   "value": "Dr. S. Reddy",
+   "confidence": 0.99
+  },
+  "bill_no": {
+   "value": "INV-5560",
+   "confidence": 0.99
+  },
+  "bill_date": {
+   "value": "14-10-2026",
+   "confidence": 0.99
+  },
+  "admission_date": {
+   "value": "12-10-2026",
+   "confidence": 0.99
+  },
+  "discharge_date": {
+   "value": "14-10-2026",
+   "confidence": 0.99
+  },
+  "subtotal": {
+   "value": "14140.00",
+   "confidence": 0.99
+  },
+  "discount": {
+   "value": "500.00",
+   "confidence": 0.99
+  },
+  "tax": {
+   "value": "0.00",
+   "confidence": 0.99
+  },
+  "total": {
+   "value": "13640.00",
+   "confidence": 0.99
+  },
+  "insurer": {
+   "value": "Suraksha Health",
+   "confidence": 0.99
+  },
+  "tpa": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "policy_no": {
+   "value": "P-7741-0093",
+   "confidence": 0.99
+  },
+  "claim_no": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "claimed_amount": {
+   "value": "",
+   "confidence": 1.0
+  }
+ },
+ "line_items": [
+  {
+   "description": "ICU Charges",
+   "qty": "1",
+   "rate": "4500.00",
+   "amount": "4500.00",
+   "confidence": 0.99
+  },
+  {
+   "description": "Doctor Consultation",
+   "qty": "3",
+   "rate": "600.00",
+   "amount": "1800.00",
+   "confidence": 0.99
+  },
+  {
+   "description": "MRI Brain (Plain)",
+   "qty": "1",
+   "rate": "6500.00",
+   "amount": "6500.00",
+   "confidence": 0.99
+  },
+  {
+   "description": "Medicines & Consumables",
+   "qty": "1",
+   "rate": "1340.00",
+   "amount": "1340.00",
+   "confidence": 0.99
+  }
+ ],
+ "engine": "local OCR (precomputed demo)",
+ "sources": {
+  "patient_name": [
+   0.1871,
+   0.197,
+   0.117,
+   0.0133
+  ],
+  "uhid": [
+   0.5568,
+   0.1974,
+   0.0948,
+   0.0104
+  ],
+  "age": [
+   0.1851,
+   0.2219,
+   0.0227,
+   0.0104
+  ],
+  "gender": [
+   0.229,
+   0.2215,
+   0.0454,
+   0.0107
+  ],
+  "hospital_name": [
+   0.2878,
+   0.0381,
+   0.421,
+   0.0259
+  ],
+  "hospital_address": [
+   0.2488,
+   0.0819,
+   0.3095,
+   0.0137
+  ],
+  "doctor": [
+   0.1649,
+   0.2696,
+   0.1204,
+   0.0133
+  ],
+  "bill_no": [
+   0.5701,
+   0.2219,
+   0.0884,
+   0.0104
+  ],
+  "bill_date": [
+   0.5884,
+   0.27,
+   0.1111,
+   0.0104
+  ],
+  "admission_date": [
+   0.1599,
+   0.2459,
+   0.1111,
+   0.0104
+  ],
+  "discharge_date": [
+   0.6027,
+   0.2459,
+   0.1106,
+   0.0104
+  ],
+  "subtotal": [
+   0.847,
+   0.4926,
+   0.0874,
+   0.0115
+  ],
+  "discount": [
+   0.8746,
+   0.5167,
+   0.0597,
+   0.0104
+  ],
+  "tax": [
+   0.8968,
+   0.5407,
+   0.0375,
+   0.0104
+  ],
+  "total": [
+   0.8124,
+   0.5674,
+   0.1219,
+   0.0148
+  ],
+  "insurer": [
+   0.1303,
+   0.2937,
+   0.1629,
+   0.0107
+  ],
+  "policy_no": [
+   0.5943,
+   0.2941,
+   0.1229,
+   0.0104
+  ],
+  "line_items.0": [
+   0.0676,
+   0.3656,
+   0.1589,
+   0.013
+  ],
+  "line_items.2": [
+   0.1194,
+   0.4222,
+   0.1441,
+   0.0122
+  ]
+ },
+ "preview": true
+}

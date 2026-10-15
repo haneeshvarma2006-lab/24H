@@ -30,7 +30,7 @@ Honest limits: Gemini and local-mode numbers come from our 9 demo documents (the
 - Works on scans, phone photos and PDFs
 
 ## 3-minute live demo
-1. **Click "▶ Try the demo bills"** on the start page (or Ctrl+A in data/samples and drop them). On the free Render server allow ~1-2 min for all 9. *"Any hospital, any layout: scan, phone photo, PDF."*
+1. **Click "▶ Try the demo bills"** on the start page (or Ctrl+A in data/samples and drop them). Loads in seconds: for these 9 the engine's output is saved (the free server has ~0.1 CPU). To show live reading, upload any other bill or a phone photo (~30-60 s on Render, ~3 s on the laptop). *"Any hospital, any layout: scan, phone photo, PDF."*
 2. **bill_01 → Approved, trust ring 100%.** Hover fields: *"Click-to-source: every value is shown where it was read."* Point at the top: *"Read → Math checked → Verified → Export. 'No human needed' shows how much we automate."*
 3. **bill_02 → wrong total.** *"The bill says ₹6,530, the items add up to ₹5,730. The AI read it right; the math caught the hospital's mistake."* Click the issue → type 5730 → Enter → Approved → **Review next →** jumps to the next bill in the queue.
 4. **bill_03 →** missing patient name + same medicine billed twice.
@@ -44,5 +44,6 @@ Honest limits: Gemini and local-mode numbers come from our 9 demo documents (the
 - **What if the AI is wrong?** Every number is checked by rules (totals, tax, qty × rate, duplicates, claim vs bill). Low-confidence fields go to a human. Nothing wrong is exported silently.
 - **What if the internet or the AI quota fails?** It switches to fully local OCR automatically. You're watching that mode now.
 - **Privacy?** Local mode never sends the bill anywhere. Demo data is fictitious.
+- **Was the demo precomputed?** For the 9 sample documents, yes: the hosted free server is very slow, so the engine's own output for them is saved (`scripts/precompute_demo.py`, page says "precomputed demo"). Any new upload is read live; try a photo of any bill.
 - **Is it just a ChatGPT wrapper?** The AI only reads. Validation, click-to-source, claim cross-check, review queue and export are ours, and it runs with no AI at all.
 - **What's next?** Overcharge alerts vs government rates (CGHS/NPPA), regional-language bills, an API for hospitals and insurers. Every human correction is saved as training data for a fine-tuned model later.

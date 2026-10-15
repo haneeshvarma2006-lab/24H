@@ -1,0 +1,192 @@
+{
+ "document_type": "bill",
+ "fields": {
+  "patient_name": {
+   "value": "Ravi Kumar",
+   "confidence": 0.94
+  },
+  "uhid": {
+   "value": "AC-20431",
+   "confidence": 0.94
+  },
+  "age": {
+   "value": "45",
+   "confidence": 0.83
+  },
+  "gender": {
+   "value": "Male",
+   "confidence": 0.83
+  },
+  "hospital_name": {
+   "value": "Arogya Care Hospital",
+   "confidence": 0.95
+  },
+  "hospital_address": {
+   "value": "12 Gandhi Road, Tirupati 517501",
+   "confidence": 0.95
+  },
+  "doctor": {
+   "value": "Or. S. Reddy",
+   "confidence": 0.87
+  },
+  "bill_no": {
+   "value": "INV-5521",
+   "confidence": 0.83
+  },
+  "bill_date": {
+   "value": "10-10-2026",
+   "confidence": 0.87
+  },
+  "admission_date": {
+   "value": "08-10-2026",
+   "confidence": 0.95
+  },
+  "discharge_date": {
+   "value": "10-10-2026",
+   "confidence": 0.95
+  },
+  "subtotal": {
+   "value": "5730.00",
+   "confidence": 0.92
+  },
+  "discount": {
+   "value": "0.00",
+   "confidence": 0.96
+  },
+  "tax": {
+   "value": "0.00",
+   "confidence": 0.92
+  },
+  "total": {
+   "value": "5730.00",
+   "confidence": 0.89
+  },
+  "insurer": {
+   "value": "Suraksha Health",
+   "confidence": 0.87
+  },
+  "tpa": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "policy_no": {
+   "value": "p-8812-7741",
+   "confidence": 0.87
+  },
+  "claim_no": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "claimed_amount": {
+   "value": "",
+   "confidence": 1.0
+  }
+ },
+ "line_items": [],
+ "engine": "local OCR (precomputed demo)",
+ "sources": {
+  "patient_name": [
+   0.1881,
+   0.2175,
+   0.1081,
+   0.0136
+  ],
+  "uhid": [
+   0.5333,
+   0.203,
+   0.0904,
+   0.0144
+  ],
+  "age": [
+   0.1861,
+   0.2424,
+   0.0239,
+   0.012
+  ],
+  "gender": [
+   0.2277,
+   0.2408,
+   0.0452,
+   0.012
+  ],
+  "hospital_name": [
+   0.2718,
+   0.0453,
+   0.3966,
+   0.0413
+  ],
+  "hospital_address": [
+   0.2375,
+   0.0951,
+   0.2905,
+   0.0229
+  ],
+  "doctor": [
+   0.1705,
+   0.2845,
+   0.1159,
+   0.0197
+  ],
+  "bill_no": [
+   0.5468,
+   0.2255,
+   0.0842,
+   0.0144
+  ],
+  "bill_date": [
+   0.5676,
+   0.2705,
+   0.1055,
+   0.0157
+  ],
+  "admission_date": [
+   0.1642,
+   0.2632,
+   0.1071,
+   0.0157
+  ],
+  "discharge_date": [
+   0.579,
+   0.2468,
+   0.105,
+   0.0152
+  ],
+  "subtotal": [
+   0.8347,
+   0.502,
+   0.0738,
+   0.0185
+  ],
+  "discount": [
+   0.8732,
+   0.5253,
+   0.0374,
+   0.0177
+  ],
+  "tax": [
+   0.8747,
+   0.5478,
+   0.0369,
+   0.0189
+  ],
+  "total": [
+   0.8119,
+   0.5758,
+   0.1019,
+   0.0185
+  ],
+  "insurer": [
+   0.1409,
+   0.307,
+   0.1554,
+   0.0201
+  ],
+  "policy_no": [
+   0.5712,
+   0.2913,
+   0.1201,
+   0.0205
+  ]
+ },
+ "preview": false
+}

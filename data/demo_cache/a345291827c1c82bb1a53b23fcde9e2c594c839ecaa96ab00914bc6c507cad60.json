@@ -1,0 +1,215 @@
+{
+ "document_type": "bill",
+ "fields": {
+  "patient_name": {
+   "value": "Meena lyer",
+   "confidence": 0.95
+  },
+  "uhid": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "age": {
+   "value": "34",
+   "confidence": 0.95
+  },
+  "gender": {
+   "value": "Female",
+   "confidence": 0.95
+  },
+  "hospital_name": {
+   "value": "Sanjeevani Medicals",
+   "confidence": 0.93
+  },
+  "hospital_address": {
+   "value": "4 Bazaar Street, Tirupati 517501",
+   "confidence": 0.97
+  },
+  "doctor": {
+   "value": "Dr. K. Rao",
+   "confidence": 0.95
+  },
+  "bill_no": {
+   "value": "SM-0918",
+   "confidence": 0.94
+  },
+  "bill_date": {
+   "value": "13-10-2026",
+   "confidence": 0.94
+  },
+  "admission_date": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "discharge_date": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "subtotal": {
+   "value": "340.00",
+   "confidence": 0.97
+  },
+  "discount": {
+   "value": "17.00",
+   "confidence": 0.96
+  },
+  "tax": {
+   "value": "16.00",
+   "confidence": 0.97
+  },
+  "total": {
+   "value": "339.00",
+   "confidence": 0.95
+  },
+  "insurer": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "tpa": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "policy_no": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "claim_no": {
+   "value": "",
+   "confidence": 1.0
+  },
+  "claimed_amount": {
+   "value": "",
+   "confidence": 1.0
+  }
+ },
+ "line_items": [
+  {
+   "description": "Azithromycin 500mg (3 tabs)",
+   "qty": "1",
+   "rate": "72.00",
+   "amount": "72.00",
+   "confidence": 0.96
+  },
+  {
+   "description": "Cetirizine 10mg (10 tabs)",
+   "qty": "1",
+   "rate": "18.00",
+   "amount": "18.00",
+   "confidence": 0.95
+  },
+  {
+   "description": "Cough Syrup 100ml",
+   "qty": "2",
+   "rate": "95.00",
+   "amount": "190.00",
+   "confidence": 0.9
+  },
+  {
+   "description": "Vitamin C 500mg (15 tabs)",
+   "qty": "1",
+   "rate": "60.00",
+   "amount": "60.00",
+   "confidence": 0.95
+  }
+ ],
+ "engine": "local OCR (precomputed demo)",
+ "sources": {
+  "patient_name": [
+   0.1306,
+   0.2133,
+   0.1106,
+   0.0129
+  ],
+  "age": [
+   0.5856,
+   0.2133,
+   0.0233,
+   0.0104
+  ],
+  "gender": [
+   0.6167,
+   0.2133,
+   0.07,
+   0.0104
+  ],
+  "hospital_name": [
+   0.0822,
+   0.0379,
+   0.4039,
+   0.0262
+  ],
+  "hospital_address": [
+   0.0806,
+   0.0817,
+   0.3067,
+   0.0138
+  ],
+  "doctor": [
+   0.1878,
+   0.2375,
+   0.0967,
+   0.0104
+  ],
+  "bill_no": [
+   0.1256,
+   0.1892,
+   0.085,
+   0.0104
+  ],
+  "bill_date": [
+   0.5561,
+   0.1892,
+   0.1106,
+   0.0104
+  ],
+  "subtotal": [
+   0.8744,
+   0.4358,
+   0.06,
+   0.0104
+  ],
+  "discount": [
+   0.8867,
+   0.46,
+   0.0478,
+   0.0104
+  ],
+  "tax": [
+   0.8867,
+   0.4842,
+   0.0478,
+   0.0104
+  ],
+  "total": [
+   0.8511,
+   0.5108,
+   0.0833,
+   0.0129
+  ],
+  "line_items.0": [
+   0.0678,
+   0.3088,
+   0.8656,
+   0.0133
+  ],
+  "line_items.1": [
+   0.0667,
+   0.3371,
+   0.8667,
+   0.0133
+  ],
+  "line_items.2": [
+   0.0667,
+   0.3654,
+   0.8667,
+   0.0133
+  ],
+  "line_items.3": [
+   0.0661,
+   0.3937,
+   0.8672,
+   0.0133
+  ]
+ },
+ "preview": false
+}

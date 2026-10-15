@@ -137,6 +137,7 @@ def health():
 
 
 SAMPLES = ROOT / "data" / "samples"
+DEMO_CACHE = ROOT / "data" / "demo_cache"  # scripts/precompute_demo.py
 SAMPLE_RE = re.compile(r"(bill|claim)_\w+\.(png|jpg|pdf)")  # only our fictitious demo documents, never imported datasets
 
 
@@ -175,7 +176,8 @@ def upload(file: UploadFile, request: Request):
         READERS.release()
 
 
-def read_and_store(data: bytes, content_type: str, filename: str):
+def read(data: bytes, content_type: str) -> tuple[dict, bytes | None]:
+    """Extract fields, then find where each was printed. Returns (doc, page-1 PNG for PDFs)."""
     # EXTRACTOR=local skips the AI entirely; otherwise Gemini, with local OCR when it is unavailable
     local, doc, ai_error = os.environ.get("EXTRACTOR") == "local", None, None
     if not local:
@@ -194,23 +196,35 @@ def read_and_store(data: bytes, content_type: str, filename: str):
                                          "try again later or switch model.")
             raise HTTPException(502, f"Extraction failed: {ai_error or e}")
     doc["engine"] = engine
-    # store under a hash name: the user's filename never touches the filesystem
-    stored_as = hashlib.sha256(data).hexdigest()[:16] + TYPES[content_type]
-    UPLOADS.mkdir(parents=True, exist_ok=True)
-    (UPLOADS / stored_as).write_bytes(data)
 
-    doc["sources"], doc["preview"] = {}, False
+    doc["sources"], doc["preview"], preview = {}, False, None
     try:  # highlights are a nice-to-have; never fail an upload over them
         image = data
         if content_type == "application/pdf":
             # shortcut: highlights cover page 1 only; render more pages if multi-page bills matter
-            image = first_page_png(data)
-            (UPLOADS / (stored_as + ".png")).write_bytes(image)
+            image = preview = first_page_png(data)
             doc["preview"] = True
         if shutil.which("tesseract"):
             doc["sources"] = locate(image, doc)
     except Exception:
         pass
+    return doc, preview
+
+
+def read_and_store(data: bytes, content_type: str, filename: str):
+    key = hashlib.sha256(data).hexdigest()
+    demo = DEMO_CACHE / f"{key}.json"
+    if demo.exists():  # one of our 9 demo documents: the engine's saved output, instant on a slow free server
+        doc = json.loads(demo.read_text())
+        preview = first_page_png(data) if doc.get("preview") else None
+    else:
+        doc, preview = read(data, content_type)
+    # store under a hash name: the user's filename never touches the filesystem
+    stored_as = key[:16] + TYPES[content_type]
+    UPLOADS.mkdir(parents=True, exist_ok=True)
+    (UPLOADS / stored_as).write_bytes(data)
+    if preview:
+        (UPLOADS / (stored_as + ".png")).write_bytes(preview)
 
     with db() as conn:
         issues = check(conn, doc)
