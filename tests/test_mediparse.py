@@ -118,3 +118,15 @@ def test_eval_compare_counts_mistakes():
     pred["line_items"][0]["description"] = "Medicines"     # misread row: counted wrong, no math error
     r = compare(pred, truth)
     assert r["wrong"] == ["total"] and r["items_ok"] == r["items"] - 1 and not r["verdict_ok"]
+
+
+def test_password_protects_hosted_app(client, monkeypatch):
+    import base64
+    monkeypatch.setenv("APP_PASSWORD", "judges2026")
+    assert client.get("/bills").status_code == 401
+    assert client.get("/").status_code == 401
+    bad = base64.b64encode(b"x:wrong").decode()
+    assert client.get("/bills", headers={"Authorization": f"Basic {bad}"}).status_code == 401
+    assert client.get("/bills", headers={"Authorization": "Basic !!notbase64"}).status_code == 401
+    good = base64.b64encode(b"anyone:judges2026").decode()
+    assert client.get("/bills", headers={"Authorization": f"Basic {good}"}).status_code == 200

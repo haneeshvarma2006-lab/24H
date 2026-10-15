@@ -1,0 +1,11 @@
+# Render Blueprint: New > Blueprint > pick this repo. Secrets are typed into the Render dashboard, never committed.
+services:
+  - type: web
+    name: hayara-ai
+    runtime: docker
+    plan: free
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: APP_PASSWORD
+        sync: false

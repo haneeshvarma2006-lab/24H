@@ -38,3 +38,16 @@ Every issue is `{"field", "rule", "message"}`; `field` matches a key in `data.fi
 Rules: `required`, `line_math`, `duplicate`, `items_sum`, `total_math`, `low_confidence`.
 
 Extraction results are cached in `data/cache/` by file hash, so bills processed once still work with no internet.
+
+## Put it online (free)
+
+The repo has a `Dockerfile` (Python + Tesseract) and a Render blueprint (`render.yaml`).
+
+1. Sign in at **render.com** with GitHub → **New → Blueprint** → pick this repo and branch.
+2. When asked, type the secrets into Render (never into the code):
+   - `GEMINI_API_KEY`: your Gemini key
+   - `APP_PASSWORD`: any password. The browser asks for it (any username), so strangers can't use up your Gemini quota.
+3. Wait for the build (~5 min). Your link is `https://hayara-ai-xxxx.onrender.com`.
+
+Free-plan limits: the app sleeps after ~15 min idle (first visit then takes ~1 min to wake, so open it before judging),
+and bills uploaded online are wiped when it restarts. That's fine for a demo; production would use PostgreSQL.

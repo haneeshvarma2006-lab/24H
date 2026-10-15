@@ -1,7 +1,8 @@
-fastapi
-uvicorn
-python-multipart
-google-genai
-openpyxl
-pytest
-httpx
+fastapi==0.143.1
+uvicorn==0.53.0
+python-multipart==0.0.32
+google-genai==2.31.0
+openpyxl==3.1.5
+pillow==12.3.0
+pytest==9.1.1
+httpx==0.28.1

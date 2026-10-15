@@ -1,0 +1,8 @@
+.git
+__pycache__
+.pytest_cache
+hayara.db
+data/uploads
+data/cache
+*.pptx
+*.pdf

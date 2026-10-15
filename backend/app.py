@@ -1,15 +1,18 @@
 """Hayara.ai API + dashboard. Run from the repo root:  uvicorn backend.app:app --reload
 Dashboard: http://127.0.0.1:8000/   API test page: http://127.0.0.1:8000/docs
 """
+import base64
 import csv
 import hashlib
 import io
 import json
+import os
+import secrets
 import shutil
 import sqlite3
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, UploadFile
+from fastapi import FastAPI, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -29,6 +32,20 @@ TYPES = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp", "appl
 app = FastAPI(title="Hayara.ai")
 # the dashboard may be served from another port during development
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+
+@app.middleware("http")
+async def require_password(request: Request, call_next):
+    """When hosted, one shared password (APP_PASSWORD) keeps strangers from spending the Gemini quota."""
+    password = os.environ.get("APP_PASSWORD")
+    if password:
+        try:
+            given = base64.b64decode(request.headers.get("authorization", "").removeprefix("Basic ")).partition(b":")[2]
+        except ValueError:
+            given = b""
+        if not secrets.compare_digest(given, password.encode()):
+            return Response(status_code=401, headers={"WWW-Authenticate": 'Basic realm="Hayara.ai"'})
+    return await call_next(request)
 
 
 def db():
