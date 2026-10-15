@@ -31,8 +31,8 @@ Honest limits: Gemini and local-mode numbers come from our 9 demo documents (the
 
 ## 3-minute live demo
 1. **Upload all 9** (Ctrl+A in data/samples). *"Any hospital, any layout: scan, phone photo, PDF."*
-2. **bill_01 → Approved.** Hover fields: *"Click-to-source: every value is shown where it was read."*
-3. **bill_02 → wrong total.** *"The bill says ₹6,530, the items add up to ₹5,730. The AI read it right; the math caught the hospital's mistake."* Click the issue → type 5730 → Enter → Approved.
+2. **bill_01 → Approved, trust ring 100%.** Hover fields: *"Click-to-source: every value is shown where it was read."* Point at the top: *"Read → Math checked → Verified → Export. 'No human needed' shows how much we automate."*
+3. **bill_02 → wrong total.** *"The bill says ₹6,530, the items add up to ₹5,730. The AI read it right; the math caught the hospital's mistake."* Click the issue → type 5730 → Enter → Approved → **Review next →** jumps to the next bill in the queue.
 4. **bill_03 →** missing patient name + same medicine billed twice.
 5. **bill_06 →** *"HbA1c: 2 × 400 = 800, bill says 900."*
 6. **claim_02 →** *"The insurance claim asks ₹6,530 but the matching bill supports ₹5,730. We protect the insurer from over-claims."*
