@@ -120,7 +120,7 @@ Rules for the teammate:
 2. Upload a crumpled phone photo: still extracted correctly. *(20 s)*
 3. Upload the bill with the **wrong total**: red flag, "Items add up to ₹48,200 but the total says ₹52,000", sent to review. *(30 s)*
 4. Click a field: the matching spot on the scan is highlighted. *(15 s)*
-5. Overcharged medicine flagged against the NPPA ceiling price. *(20 s)*
+5. Upload claim_02: "Claimed ₹6,530, but the matching bill adds up to ₹5,730": the insurer is protected. *(20 s)*
 6. Fix one field in the review screen, approve, export. *(15 s)*
 
 ### Judges' Q&A (prepare these answers)

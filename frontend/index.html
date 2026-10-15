@@ -256,7 +256,7 @@ function renderList() {
     pending.map(name => `<li class="busy"><span class="spin" aria-hidden="true"></span>Reading ${esc(name)}…</li>`).join('') +
     (shown.length ? shown.map(b => `<li><button type="button" class="item ${current && b.id === current.id ? 'on' : ''}" data-id="${b.id}">
         <span class="t">${esc(b.patient_name || 'Patient name missing')}</span>
-        <span class="s">${esc(b.hospital_name || b.filename)}</span>
+        <span class="s">${b.document_type === 'claim_form' ? 'Claim · ' : ''}${esc(b.hospital_name || b.filename)}</span>
         <span class="m"><span class="num">${money(b.total)}</span>
           <span class="pill ${b.status}">${b.status === 'approved' ? 'Approved' : plural(b.issue_count, 'issue')}</span></span>
       </button></li>`).join('')
@@ -302,7 +302,7 @@ function renderDetail() {
     <div class="bar">
       <div class="grow">
         <h1 tabindex="-1">${esc(f.patient_name.value || 'Patient name missing')}</h1>
-        <p>${[f.hospital_name.value, f.bill_no.value && `Bill ${f.bill_no.value}`, f.bill_date.value, b.filename].filter(Boolean).map(esc).join(' · ')}</p>
+        <p>${[d.document_type === 'claim_form' && 'Insurance claim', f.hospital_name.value, f.bill_no.value && `Bill ${f.bill_no.value}`, f.bill_date.value, b.filename].filter(Boolean).map(esc).join(' · ')}</p>
       </div>
       <span class="pill ${b.status}">${b.status === 'approved' ? 'Approved' : 'Needs review'}</span>
       ${b.status === 'review' ? '<button type="button" class="btn" id="approve">Approve as is</button>' : ''}
@@ -327,14 +327,14 @@ function renderDetail() {
           </section>`
         : `<section class="checks ok">✓ All checks passed: required fields, line math, duplicates, subtotal, total and AI confidence.</section>`}
 
-        <section aria-labelledby="math-h">
+        ${d.document_type !== 'bill' ? '' : `<section aria-labelledby="math-h">
           <h2 id="math-h">Math check</h2>
           <div class="math num">
             ${step(`Items ${money(itemsSum)}`, rules.has('items_sum') || rules.has('line_math'))}<em>→</em>
             ${step(`Subtotal ${money(f.subtotal.value)}`, rules.has('items_sum'), num(f.subtotal.value) === null)}<em>− discount + tax →</em>
             ${step(`Total ${money(f.total.value)}`, rules.has('total_math') || num(f.total.value) === null)}
           </div>
-        </section>
+        </section>`}
 
         ${GROUPS.map(([title, keys]) => {
           const filled = keys.filter(k => String(f[k].value).trim()).length;

@@ -62,7 +62,7 @@
       "confidence": 1.0
     },
     "insurer": {
-      "value": "",
+      "value": "Suraksha Health",
       "confidence": 1.0
     },
     "tpa": {
@@ -70,7 +70,7 @@
       "confidence": 1.0
     },
     "policy_no": {
-      "value": "",
+      "value": "P-9031-2208",
       "confidence": 1.0
     },
     "claim_no": {

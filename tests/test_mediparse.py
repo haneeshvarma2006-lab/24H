@@ -232,3 +232,29 @@ def test_export_amounts_are_numbers_and_first_ai_value_kept(client):
     header = [c.value for c in wb["Bills"][1]]
     assert wb["Bills"][2][header.index("total")].value == 3450 and wb["Bills"][2][header.index("bill_date")].data_type != "n"
     assert wb["Line items"][2][4].value == 3000
+
+
+def make_claim(claimed="3450", policy="P-1", name="Ravi Kumar"):
+    doc = make_doc(items=(), total="", subtotal="", patient_name=name, policy_no=policy, claimed_amount=claimed)
+    doc["document_type"] = "claim_form"
+    return doc
+
+
+def test_claim_cross_check():
+    from backend.validate import cross_check
+    bill = make_doc(policy_no="P-1")  # items add up to 3450
+    assert validate(make_claim()) == [] and cross_check(make_claim(), [(7, bill)]) == []
+    over = cross_check(make_claim(claimed="5000"), [(7, bill)])
+    assert over[0]["rule"] == "claim_match" and "#7" in over[0]["message"] and "3,450.00" in over[0]["message"]
+    assert cross_check(make_claim(policy="", name="ravi  KUMAR"), [(7, bill)]) == []  # falls back to patient name
+    assert cross_check(make_claim(policy="P-9", name="Someone"), [(7, bill)])[0]["message"].startswith("No uploaded bill")
+
+
+def test_claim_upload_checks_against_stored_bills(client, monkeypatch):
+    monkeypatch.setattr(api, "extract", lambda data, mime: make_doc(policy_no="P-1"))
+    client.post("/upload", files={"file": ("bill.jpg", b"bill", "image/jpeg")})
+    monkeypatch.setattr(api, "extract", lambda data, mime: make_claim(claimed="5000"))
+    r = client.post("/upload", files={"file": ("claim.jpg", b"claim", "image/jpeg")}).json()
+    assert r["status"] == "review" and [i["rule"] for i in r["issues"]] == ["claim_match"]
+    fixed = client.patch(f"/bills/{r['id']}", json={"field": "claimed_amount", "value": "3450"}).json()
+    assert fixed["status"] == "approved"

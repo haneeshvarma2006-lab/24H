@@ -1,0 +1,88 @@
+{
+  "document_type": "claim_form",
+  "fields": {
+    "patient_name": {
+      "value": "Ravi Kumar",
+      "confidence": 1.0
+    },
+    "uhid": {
+      "value": "",
+      "confidence": 1.0
+    },
+    "age": {
+      "value": "45",
+      "confidence": 1.0
+    },
+    "gender": {
+      "value": "Male",
+      "confidence": 1.0
+    },
+    "hospital_name": {
+      "value": "Arogya Care Hospital",
+      "confidence": 1.0
+    },
+    "hospital_address": {
+      "value": "",
+      "confidence": 1.0
+    },
+    "doctor": {
+      "value": "",
+      "confidence": 1.0
+    },
+    "bill_no": {
+      "value": "",
+      "confidence": 1.0
+    },
+    "bill_date": {
+      "value": "",
+      "confidence": 1.0
+    },
+    "admission_date": {
+      "value": "08-10-2026",
+      "confidence": 1.0
+    },
+    "discharge_date": {
+      "value": "10-10-2026",
+      "confidence": 1.0
+    },
+    "subtotal": {
+      "value": "",
+      "confidence": 1.0
+    },
+    "discount": {
+      "value": "",
+      "confidence": 1.0
+    },
+    "tax": {
+      "value": "",
+      "confidence": 1.0
+    },
+    "total": {
+      "value": "",
+      "confidence": 1.0
+    },
+    "insurer": {
+      "value": "Suraksha Health",
+      "confidence": 1.0
+    },
+    "tpa": {
+      "value": "MediAssist TPA",
+      "confidence": 1.0
+    },
+    "policy_no": {
+      "value": "P-8812-7741",
+      "confidence": 1.0
+    },
+    "claim_no": {
+      "value": "C-30017",
+      "confidence": 1.0
+    },
+    "claimed_amount": {
+      "value": "5730",
+      "confidence": 1.0
+    }
+  },
+  "line_items": [],
+  "mistake": null,
+  "check_verdict": false
+}

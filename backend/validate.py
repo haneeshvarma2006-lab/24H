@@ -12,6 +12,26 @@ def amount(text):
     return float(match.group().replace(",", "")) if match else None
 
 
+def cross_check(claim: dict, bills: list[tuple[int, dict]]) -> list[dict]:
+    """Claim form vs the bill it claims for (matched by policy no., else patient name):
+    the claimed amount must equal what the bill's line items add up to."""
+    field = lambda d, k: " ".join(str(d["fields"][k]["value"]).casefold().split())
+    match = next(((i, b) for i, b in bills if field(claim, "policy_no") and field(b, "policy_no") == field(claim, "policy_no")),
+                 None) or next(((i, b) for i, b in bills
+                                if field(claim, "patient_name") and field(b, "patient_name") == field(claim, "patient_name")), None)
+    if match is None:
+        return [{"field": "claimed_amount", "rule": "claim_match",
+                 "message": "No uploaded bill matches this claim (same policy no. or patient name). Upload the bill first."}]
+    bill_id, bill = match
+    items = [a for a in (amount(i["amount"]) for i in bill["line_items"]) if a is not None]
+    billed = sum(items) if items else amount(bill["fields"]["total"]["value"])
+    claimed = amount(claim["fields"]["claimed_amount"]["value"])
+    if claimed is not None and billed is not None and abs(claimed - billed) > TOLERANCE:
+        return [{"field": "claimed_amount", "rule": "claim_match",
+                 "message": f"Claimed ₹{claimed:,.2f}, but the matching bill (#{bill_id}) adds up to ₹{billed:,.2f}"}]
+    return []
+
+
 def validate(doc: dict) -> list[dict]:
     """Return a list of issues: {"field", "rule", "message"}. Empty list means approved."""
     issues = []

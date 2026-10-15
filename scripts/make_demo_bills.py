@@ -28,7 +28,7 @@ BILLS = [
     dict(name="bill_01", style="hospital", mistake=None, **HOSPITAL,
          patient_name="Ravi Kumar", uhid="AC-20431", age="45", gender="Male", bill_no="INV-5521",
          bill_date="10-10-2026", admission_date="08-10-2026", discharge_date="10-10-2026",
-         insurer="Star Health", policy_no="P-8812-7741",
+         insurer="Suraksha Health", policy_no="P-8812-7741",
          items=[("Room Rent (General Ward)", "2", "1500", "3000"), ("Doctor Consultation", "2", "500", "1000"),
                 ("CBC Blood Test", "1", "450", "450"), ("Chest X-Ray", "1", "800", "800"),
                 ("IV Fluids (NS 500ml)", "4", "120", "480")],
@@ -36,7 +36,7 @@ BILLS = [
     dict(name="bill_02", style="hospital", mistake="total says 6,530; items add up to 5,730", **HOSPITAL,
          patient_name="Lakshmi Devi", uhid="AC-20517", age="62", gender="Female", bill_no="INV-5534",
          bill_date="11-10-2026", admission_date="09-10-2026", discharge_date="11-10-2026",
-         insurer="", policy_no="",
+         insurer="Suraksha Health", policy_no="P-9031-2208",
          items=[("Room Rent (General Ward)", "2", "1500", "3000"), ("Doctor Consultation", "2", "500", "1000"),
                 ("ECG", "1", "350", "350"), ("Lipid Profile", "1", "900", "900"),
                 ("Nursing Charges", "2", "240", "480")],
@@ -55,6 +55,35 @@ BILLS = [
                 ("Cough Syrup 100ml", "2", "95", "190"), ("Vitamin C 500mg (15 tabs)", "1", "60", "60")],
          subtotal="340", discount="17", tax="16", total="339"),
 ]
+
+
+# claim forms for bill_01 (matches) and bill_02 (claims the bill's wrong printed total)
+CLAIMS = [
+    dict(name="claim_01", mistake=None, patient_name="Ravi Kumar", age="45", gender="Male", insurer="Suraksha Health",
+         tpa="MediAssist TPA", policy_no="P-8812-7741", claim_no="C-30017", hospital_name="Arogya Care Hospital",
+         admission_date="08-10-2026", discharge_date="10-10-2026", claimed_amount="5730"),
+    dict(name="claim_02", mistake="claims 6,530 but bill_02's items add up to 5,730", patient_name="Lakshmi Devi",
+         age="62", gender="Female", insurer="Suraksha Health", tpa="MediAssist TPA", policy_no="P-9031-2208",
+         claim_no="C-30042", hospital_name="Arogya Care Hospital", admission_date="09-10-2026",
+         discharge_date="11-10-2026", claimed_amount="6530"),
+]
+CLAIM_ROWS = [("Name of the patient", "patient_name"), ("Age / Gender", None), ("Insurance company", "insurer"),
+              ("TPA", "tpa"), ("Policy number", "policy_no"), ("Claim number", "claim_no"),
+              ("Name of hospital", "hospital_name"), ("Date of admission", "admission_date"),
+              ("Date of discharge", "discharge_date"), ("Total amount claimed (Rs.)", "claimed_amount")]
+
+
+def claim_html(c):
+    rows = "".join(f"<tr><td>{label}</td><td><b>{c[key] if key else c['age'] + ' / ' + c['gender']}</b></td></tr>"
+                   for label, key in CLAIM_ROWS)
+    return f"""<html><head><style>
+    body{{margin:0;width:{W}px;height:{H}px;font-family:'DejaVu Sans',Arial,sans-serif;font-size:18px;color:#111;background:#fff}}
+    .page{{padding:50px}} h1{{font-size:26px;text-align:center;margin:0}} h2{{font-size:18px;text-align:center;font-weight:normal;margin:6px 0 30px}}
+    table{{width:100%;border-collapse:collapse}} td{{border:1px solid #444;padding:12px 14px}} td:first-child{{width:45%;background:#f2f2f2}}
+    .sig{{margin-top:70px;display:flex;justify-content:space-between}} .foot{{margin-top:60px;font-size:13px;color:#666;text-align:center}}
+    </style></head><body><div class=page><h1>HEALTH INSURANCE CLAIM FORM</h1><h2>Part A · to be filled by the insured</h2>
+    <table>{rows}</table><div class=sig><span>Date: 12-10-2026</span><span>Signature of the insured</span></div>
+    <p class=foot>Demo document · fictitious data · not a real claim</p></div></body></html>"""
 
 
 def rupees(x):
@@ -107,21 +136,23 @@ def main():
     samples.mkdir(parents=True, exist_ok=True)
     truths.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
-        for b in BILLS:
+        for b in BILLS + CLAIMS:
             page, shot = Path(tmp) / f"{b['name']}.html", Path(tmp) / f"{b['name']}.png"
-            page.write_text(html(b), encoding="utf-8")
+            page.write_text(html(b) if b in BILLS else claim_html(b), encoding="utf-8")
             # headless Chrome eats ~90px of the window height, so render taller and crop
             subprocess.run([CHROME, "--headless", "--no-sandbox", "--disable-gpu", "--hide-scrollbars",
                             f"--window-size={W},{H + 200}", f"--screenshot={shot}", page.as_uri()],
                            check=True, capture_output=True)
             Image.open(shot).crop((0, 0, W, H)).convert("RGB").save(samples / f"{b['name']}.png")
-            (truths / f"{b['name']}.json").write_text(json.dumps(truth(b), indent=2, ensure_ascii=False))
+            # claims are validated against bills, so the stand-alone eval verdict doesn't apply to them
+            t = truth(b) if b in BILLS else truth(b | {"items": []}) | {"document_type": "claim_form", "check_verdict": False}
+            (truths / f"{b['name']}.json").write_text(json.dumps(t, indent=2, ensure_ascii=False))
 
     # a "phone photo" of bill_01: tilted, blurred, grey, JPEG
     photo = Image.open(samples / "bill_01.png").convert("L").rotate(3, expand=True, fillcolor=200)
     photo.filter(ImageFilter.GaussianBlur(1.1)).save(samples / "bill_05_photo.jpg", quality=55)
     (truths / "bill_05_photo.json").write_text((truths / "bill_01.json").read_text())
-    print(f"wrote {len(BILLS) + 1} bills to {samples}")
+    print(f"wrote {len(BILLS) + 1} bills and {len(CLAIMS)} claim forms to {samples}")
 
 
 if __name__ == "__main__":

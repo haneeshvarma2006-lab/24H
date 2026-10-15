@@ -22,7 +22,7 @@ from pydantic import BaseModel
 
 from backend.extract import FIELDS, extract
 from backend.locate import locate
-from backend.validate import amount, validate
+from backend.validate import amount, cross_check, validate
 
 ROOT = Path(__file__).resolve().parent.parent
 DB = ROOT / "hayara.db"
@@ -72,6 +72,16 @@ def load(conn, bill_id):
     return row
 
 
+def check(conn, doc):
+    """All rule checks; a claim form is also compared with the uploaded bills."""
+    issues = validate(doc)
+    if doc.get("document_type") == "claim_form":
+        # shortcut: a claim is checked when uploaded or edited, not again when its bill is fixed later
+        bills = [(r["id"], json.loads(r["data"])) for r in conn.execute("SELECT id, data FROM bills ORDER BY id DESC")]
+        issues += cross_check(doc, [(i, d) for i, d in bills if d.get("document_type") == "bill"])
+    return issues
+
+
 def as_json(row):
     return {"id": row["id"], "filename": row["filename"], "mime_type": row["mime_type"], "status": row["status"],
             "created_at": row["created_at"], "data": json.loads(row["data"]),
@@ -92,7 +102,6 @@ def upload(file: UploadFile):
         doc = extract(data, file.content_type)
     except Exception as e:  # missing key, rate limit, network, bad model output
         raise HTTPException(502, f"Extraction failed: {e}")
-    issues = validate(doc)
     doc["sources"] = {}
     # shortcut: click-to-source only for images, PDFs would need page rendering first
     if file.content_type.startswith("image/") and shutil.which("tesseract"):
@@ -107,6 +116,7 @@ def upload(file: UploadFile):
     (UPLOADS / stored_as).write_bytes(data)
 
     with db() as conn:
+        issues = check(conn, doc)
         cur = conn.execute(
             "INSERT INTO bills (filename, stored_as, mime_type, status, data, issues) VALUES (?, ?, ?, ?, ?, ?)",
             (file.filename, stored_as, file.content_type, "review" if issues else "approved",
@@ -121,11 +131,12 @@ def bills(status: str | None = None):
             "SELECT * FROM bills WHERE ? IS NULL OR status = ? ORDER BY id DESC", (status, status)).fetchall()
     out = []
     for r in rows:
-        f = json.loads(r["data"])["fields"]
-        out.append({"id": r["id"], "filename": r["filename"], "status": r["status"],
+        d = json.loads(r["data"])
+        f = d["fields"]
+        out.append({"id": r["id"], "filename": r["filename"], "status": r["status"], "document_type": d["document_type"],
                     "created_at": r["created_at"], "issue_count": len(json.loads(r["issues"])),
                     "patient_name": f["patient_name"]["value"], "hospital_name": f["hospital_name"]["value"],
-                    "total": f["total"]["value"]})
+                    "total": f["total"]["value"] or f["claimed_amount"]["value"]})
     return out
 
 
@@ -165,7 +176,7 @@ def correct(bill_id: int, fix: Correction):
         conn.execute("INSERT INTO corrections (bill_id, field, ai_value, corrected_value) VALUES (?, ?, ?, ?)",
                      (bill_id, fix.field, first[0] if first else target[key], fix.value))
         target[key], target["confidence"] = fix.value, 1.0  # a human checked it
-        issues = validate(doc)
+        issues = check(conn, doc)
         # a reviewer's approval survives edits unless the edit creates a new problem
         approved_issues = {(i["field"], i["rule"]) for i in json.loads(row["issues"])}
         kept = row["status"] == "approved" and all((i["field"], i["rule"]) in approved_issues for i in issues)
