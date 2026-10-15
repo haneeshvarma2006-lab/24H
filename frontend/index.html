@@ -78,6 +78,9 @@
   .item .t { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .item .s { grid-column: 2; font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .item .m { grid-column: 3; grid-row: 1 / 3; display: grid; justify-items: end; align-content: center; gap: 4px; font-size: 13px; font-weight: 700; }
+  .link { border: 0; background: none; padding: 0; color: var(--blue-ink); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+  .open-bill { display: block; margin: 6px 0 0 31px; font-size: 13px; }
+  .busy small { display: block; font-size: 11.5px; opacity: .8; }
   .none, .busy { font-size: 13px; color: var(--muted); padding: 10px 12px; }
   .busy { display: flex; gap: 10px; align-items: center; border: 1px dashed #a5b4fc; border-radius: 12px; background: var(--blue-soft); color: var(--blue-ink);
           position: relative; overflow: hidden; }
@@ -320,12 +323,14 @@ function renderList() {
   const rate = bills.length ? Math.round(100 * (bills.length - review) / bills.length) : 0;
   $('#stats').innerHTML = `<div><b class="num">${bills.length}</b>documents</div>
     <div><b class="num">${review}</b>need review</div><div><b class="num">${bills.length - review}</b>approved</div>
-    <div class="rate"><b class="num">${rate}%</b>no human needed</div>`;
+    <div class="rate"><b class="num">${rate}%</b>no human needed</div>
+    <div title="Every human correction is saved next to the AI's answer and used to retrain the field model"><b class="num">${bills.reduce((n, b) => n + b.fixes, 0)}</b>fixes → training data</div>`;
   for (const b of $('#tabs').children) b.setAttribute('aria-pressed', b.dataset.tab === tab);
 
   const shown = tab === 'all' ? bills : bills.filter(b => b.status === tab);
   list.innerHTML =
-    pending.map(name => `<li class="busy"><span class="spin" aria-hidden="true"></span>Reading ${esc(name)}…</li>`).join('') +
+    pending.map(p => `<li class="busy"><span class="spin" aria-hidden="true"></span><span>Reading ${esc(p.name)}…
+      <small data-start="${p.start}"></small></span></li>`).join('') +
     (shown.length ? shown.map(b => `<li><button type="button" class="item ${b.status} ${current && b.id === current.id ? 'on' : ''}" data-id="${b.id}">
         <span class="ic" aria-hidden="true">${b.document_type === 'claim_form' ? '🛡️' : '🧾'}</span>
         <span class="t">${esc(b.patient_name || 'Patient name missing')}</span>
@@ -333,8 +338,19 @@ function renderList() {
         <span class="m"><span class="num">${money(b.total)}</span>
           <span class="pill ${b.status}">${b.status === 'approved' ? 'Approved' : plural(b.issue_count, 'issue')}</span></span>
       </button></li>`).join('')
-    : pending.length ? '' : `<li class="none">${bills.length ? 'Nothing here.' : 'No bills yet. Upload one to start.'}</li>`);
+    : pending.length ? '' : bills.length ? '<li class="none">Nothing here.</li>'
+      : '<li class="none">No bills yet. Upload one, or <button type="button" class="link" data-demo>load the demo bills</button>.</li>');
+  tick();
 }
+
+// seconds since each upload started; reading is slow on a free server, so say so instead of spinning silently
+function tick() {
+  for (const el of list.querySelectorAll('small[data-start]')) {
+    const s = Math.round((Date.now() - el.dataset.start) / 1000);
+    el.textContent = s < 8 ? `${s}s` : `${s}s · OCR on a small free server can take up to a minute`;
+  }
+}
+setInterval(() => pending.length && tick(), 1000);
 
 /* ---------- detail ---------- */
 
@@ -413,7 +429,8 @@ function renderDetail() {
             <h2 id="checks-h">${plural(b.issues.length, 'issue')} to check${b.status === 'approved' ? ' · approved by reviewer' : ''}</h2>
             ${b.issues.map(i => `<button type="button" class="issue ${i.rule === 'low_confidence' ? 'warn' : ''}" data-target="${esc(i.field)}">
               <i aria-hidden="true">${i.rule === 'low_confidence' ? '?' : '!'}</i>
-              <span>${esc(i.message)}<small>${esc(label(i.field))} · ${i.rule === 'low_confidence' ? 'click, check it, press Enter to confirm' : 'click to fix'}</small></span></button>`).join('')}
+              <span>${esc(i.message)}<small>${esc(label(i.field))} · ${i.rule === 'low_confidence' ? 'click, check it, press Enter to confirm' : 'click to fix'}</small></span></button>
+              ${i.rule === 'claim_match' && /#(\d+)/.test(i.message) ? `<button type="button" class="link open-bill" data-id="${i.message.match(/#(\d+)/)[1]}">Open the matching bill #${i.message.match(/#(\d+)/)[1]} →</button>` : ''}`).join('')}
           </section>`
         : `<section class="checks ok">✓ All checks passed: required fields, line math, duplicates, subtotal, total and AI confidence.</section>`}
 
@@ -560,7 +577,7 @@ function renderEmpty() {
       <span class="kicker">Hospital bills · Insurance claims</span>
       <h1>Read any bill. <span>Catch every wrong rupee.</span></h1>
       <p>Drop a scan, phone photo or PDF. Hayara reads it, checks the math, and only asks you about what's uncertain.</p>
-      <button type="button" class="btn demo" id="demo">▶ Try the demo bills</button>
+      <button type="button" class="btn demo" id="demo" data-demo>▶ Try the demo bills</button>
       <span class="demo-note">9 fictitious bills and claims, 4 with planted mistakes</span>
       <div class="steps">
         <div><i>1</i><b>AI reads</b>Patient, hospital, every charge, totals and claim data.</div>
@@ -579,9 +596,15 @@ function renderEmpty() {
   </div>`;
 }
 
+const ACCEPT = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'], MAX_MB = 20;  // same limits as the server
+
 async function upload(files) {
   for (const file of files) {
-    pending.push(file.name);
+    // fail fast in the browser; the server still checks the real bytes
+    if (!ACCEPT.includes(file.type)) { toast(`${file.name}: only JPG, PNG, WEBP or PDF`, 'error'); continue; }
+    if (file.size > MAX_MB * 1024 * 1024) { toast(`${file.name}: larger than ${MAX_MB} MB`, 'error'); continue; }
+    const job = { name: file.name, start: Date.now() };
+    pending.push(job);
     renderList();
     try {
       const form = new FormData();
@@ -589,12 +612,12 @@ async function upload(files) {
       const b = await api('/upload', { method: 'POST', body: form });
       toast(b.issues.length ? `${file.name}: ${plural(b.issues.length, 'issue')} found, needs review`
                             : `${file.name}: all checks passed ✓`, b.issues.length ? '' : 'good');
-      pending.splice(pending.indexOf(file.name), 1);
+      pending.splice(pending.indexOf(job), 1);
       await loadBills();
       const a = document.activeElement;  // don't yank the reviewer away from an edit they haven't saved yet
       if (!(a?.dataset?.key && a.value !== a.defaultValue)) await select(b.id);
     } catch (e) {
-      pending.splice(pending.indexOf(file.name), 1);
+      pending.splice(pending.indexOf(job), 1);
       renderList();
       toast(`${file.name}: ${e.message}`, 'error');
     }
@@ -602,6 +625,7 @@ async function upload(files) {
 }
 
 async function loadDemo(button) {
+  if (pending.length) return;  // already loading
   button.disabled = true;
   try {
     const names = await api('/samples');
@@ -618,6 +642,8 @@ async function loadDemo(button) {
 }
 
 /* ---------- events ---------- */
+
+document.addEventListener('click', e => { const b = e.target.closest('[data-demo]'); if (b) loadDemo(b); });
 
 $('#drop').addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', () => { upload([...fileInput.files]); fileInput.value = ''; });
@@ -663,8 +689,7 @@ main.addEventListener('click', async e => {
   const box = e.target.closest('.box');
   if (box) return focusField(box.dataset.src);
   if (e.target.id === 'approve') approve();
-  if (e.target.id === 'next') select(+e.target.dataset.id);
-  if (e.target.id === 'demo') loadDemo(e.target);
+  if (e.target.id === 'next' || e.target.classList.contains('open-bill')) select(+e.target.dataset.id);
 });
 
 (async () => {

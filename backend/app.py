@@ -239,13 +239,14 @@ def read_and_store(data: bytes, content_type: str, filename: str):
 def bills(status: str | None = None):
     with db() as conn:
         rows = conn.execute(
-            "SELECT * FROM bills WHERE ? IS NULL OR status = ? ORDER BY id DESC", (status, status)).fetchall()
+            "SELECT *, (SELECT COUNT(*) FROM corrections c WHERE c.bill_id = bills.id) AS fixes FROM bills "
+            "WHERE ? IS NULL OR status = ? ORDER BY id DESC", (status, status)).fetchall()
     out = []
     for r in rows:
         d = json.loads(r["data"])
         f = d["fields"]
         out.append({"id": r["id"], "filename": r["filename"], "status": r["status"], "document_type": d["document_type"],
-                    "created_at": r["created_at"], "issue_count": len(json.loads(r["issues"])),
+                    "created_at": r["created_at"], "issue_count": len(json.loads(r["issues"])), "fixes": r["fixes"],
                     "patient_name": f["patient_name"]["value"], "hospital_name": f["hospital_name"]["value"],
                     "total": f["total"]["value"] or f["claimed_amount"]["value"]})
     return out

@@ -100,6 +100,7 @@ def test_upload_review_correct_export(client):
     with api.db() as conn:
         fix = conn.execute("SELECT ai_value, corrected_value FROM corrections").fetchone()
     assert tuple(fix) == ("5200", "3450")
+    assert client.get("/bills").json()[0]["fixes"] == 1  # the dashboard counts fixes saved as training data
 
     assert client.get("/export", params={"format": "csv"}).text.splitlines()[1].startswith("1,bill.jpg,approved")
     assert client.get("/export").content[:2] == b"PK"  # xlsx is a zip
