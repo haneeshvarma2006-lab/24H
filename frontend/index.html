@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hayara.ai · Hospital bill reader</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a65f7'/%3E%3Ctext x='16' y='23' font-size='20' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Ctext x='16' y='23' font-size='20' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <style>
@@ -13,7 +13,7 @@
     --blue: #4f46e5; --blue-soft: #eef0ff; --blue-ink: #3730a3; --teal: #14b8a6;
     --orange: #f08722; --orange-soft: #fff1e0; --orange-ink: #9a4a06;
     --green: #0f7654; --green-soft: #e1f6ec;
-    --red: #d62839; --red-soft: #fdecee;
+    --red: #c8202f; --red-soft: #fdecee;
     --radius: 14px;
     --shadow: 0 1px 2px rgb(11 22 48 / .06), 0 8px 24px rgb(11 22 48 / .06);
     font-family: "Plus Jakarta Sans", Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -150,8 +150,8 @@
   .page iframe { display: block; width: 100%; height: calc(100vh - 170px); border: 0; }
   .box { position: absolute; border-radius: 4px; padding: 0; background: none; border: 2px solid transparent; transition: box-shadow .15s, background .15s; }
   .box.flag { border-color: var(--orange); background: rgb(240 135 34 / .14); }
-  .box.flag.err { border-color: var(--red); background: rgb(214 40 57 / .12); animation: pulse 1.6s ease-in-out infinite; }
-  @keyframes pulse { 50% { box-shadow: 0 0 0 5px rgb(214 40 57 / .18); } }
+  .box.flag.err { border-color: var(--red); background: rgb(200 32 47 / .12); animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 5px rgb(200 32 47 / .18); } }
   .box.active { border-color: var(--blue); background: rgb(79 70 229 / .16); box-shadow: 0 0 0 5px rgb(79 70 229 / .2); animation: none; }
   .note { font-size: 12px; color: var(--muted); text-align: center; margin: 10px 0 0; }
   .note a { color: var(--blue-ink); font-weight: 700; }
@@ -177,7 +177,7 @@
   .math { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13.5px; }
   .math span { padding: 7px 11px; border-radius: 10px; background: var(--bg); font-weight: 600; }
   .math span.ok { background: var(--green-soft); color: var(--green); }
-  .math span.no { background: var(--red-soft); color: var(--red); font-weight: 800; box-shadow: inset 0 0 0 1px rgb(214 40 57 / .35); }
+  .math span.no { background: var(--red-soft); color: var(--red); font-weight: 800; box-shadow: inset 0 0 0 1px rgb(200 32 47 / .35); }
   .math em { font-style: normal; color: var(--muted); font-size: 12px; }
 
   details { border: 1px solid var(--line); border-radius: var(--radius); padding: 4px 14px 10px; }
@@ -301,6 +301,7 @@ const num = v => { const m = String(v ?? '').match(/-?\d[\d,]*(?:\.\d+)?/); retu
 const money = v => { const n = num(v); return n === null ? '—' : n.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }); };
 const srcKey = key => key.startsWith('line_items.') ? key.split('.').slice(0, 2).join('.') : key;
 const label = key => key.startsWith('line_items.') ? `Line ${+key.split('.')[1] + 1}` : (LABELS[key] || key);
+const HINT = `${matchMedia('(hover: none)').matches ? 'Tap' : 'Hover or click'} a field to see where it was read on the scan.`;
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 function toast(text, kind = '') {
@@ -312,7 +313,12 @@ function toast(text, kind = '') {
 }
 
 async function api(path, options = {}) {
-  const res = await fetch(path, { ...options, headers: { ...options.headers, 'X-Hayara': '1' } });
+  let res;
+  try {
+    res = await fetch(path, { ...options, headers: { ...options.headers, 'X-Hayara': '1' } });
+  } catch {  // offline, or the free server is asleep / restarting
+    throw new Error("Can't reach the server. If it was idle it may be waking up: wait a minute and try again.");
+  }
   const body = (res.headers.get('content-type') || '').includes('json') ? await res.json() : null;
   if (!res.ok) {
     const detail = body && body.detail;
@@ -423,7 +429,7 @@ function renderDetail() {
         : nextReview ? `<button type="button" class="btn ghost" id="next" data-id="${nextReview.id}">Review next →</button>` : ''}
     </div>
     <div class="panes">
-      <div class="viewer" id="viewer">
+      <div class="viewer" id="viewer" tabindex="0" role="region" aria-label="Scan of the uploaded document">
         <div class="page ${sweep ? 'sweep' : ''}">
           ${b.mime_type === 'application/pdf' && !d.preview
             ? `<iframe src="/bills/${b.id}/file" title="Scan of ${esc(b.filename)}"></iframe>`
@@ -431,7 +437,7 @@ function renderDetail() {
         </div>
         ${d.preview ? `<p class="note"><a href="/bills/${b.id}/file" target="_blank" rel="noopener">Open the original PDF</a> · highlights show page 1</p>` : ''}
         <p class="note">${Object.keys(sources).length
-          ? 'Hover or click a field to see where it was read on the scan.'
+          ? HINT
           : 'Highlights on the scan are available for image uploads.'}</p>
       </div>
       <div class="data">
@@ -485,7 +491,7 @@ function highlight(key) {
   for (const box of main.querySelectorAll('.box.active')) box.classList.remove('active');
   const box = main.querySelector(`.box[data-src="${src}"]`), note = main.querySelector('#viewer .note');
   if (note && main.querySelector('.box'))
-    note.textContent = box ? 'Hover or click a field to see where it was read on the scan.'
+    note.textContent = box ? HINT
                            : `${label(key)} could not be found on the scan image. Check it by eye.`;
   if (!box) return;
   box.classList.add('active');
@@ -705,7 +711,7 @@ main.addEventListener('click', async e => {
 
 (async () => {
   renderEmpty();
-  try { await loadBills(); } catch (e) { return toast(`Cannot reach the Hayara.ai server: ${e.message}`, 'error'); }
+  try { await loadBills(); } catch (e) { return toast(e.message, 'error'); }
   const id = +(location.hash.match(/^#bill\/(\d+)$/) || [])[1];
   if (id) select(id);
 })();
