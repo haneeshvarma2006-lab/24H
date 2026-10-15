@@ -258,3 +258,13 @@ def test_claim_upload_checks_against_stored_bills(client, monkeypatch):
     assert r["status"] == "review" and [i["rule"] for i in r["issues"]] == ["claim_match"]
     fixed = client.patch(f"/bills/{r['id']}", json={"field": "claimed_amount", "value": "3450"}).json()
     assert fixed["status"] == "approved"
+
+
+@pytest.mark.skipif(not shutil.which("tesseract"), reason="Tesseract not installed")
+def test_pdf_upload_gets_page_preview_and_highlights(client, monkeypatch):
+    root = Path(__file__).resolve().parent.parent / "data"
+    truth = json.loads((root / "truth" / "bill_07.json").read_text())
+    monkeypatch.setattr(api, "extract", lambda data, mime: copy.deepcopy(truth))
+    r = client.post("/upload", files={"file": ("bill.pdf", (root / "samples" / "bill_07.pdf").read_bytes(), "application/pdf")}).json()
+    assert r["data"]["preview"] and {"total", "line_items.2"} <= set(r["data"]["sources"])
+    assert client.get(f"/bills/{r['id']}/preview").headers["content-type"] == "image/png"

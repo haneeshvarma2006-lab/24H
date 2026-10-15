@@ -4,5 +4,6 @@ python-multipart==0.0.32
 google-genai==2.31.0
 openpyxl==3.1.5
 pillow==12.3.0
+pypdfium2==5.13.0
 pytest==9.1.1
 httpx==0.28.1

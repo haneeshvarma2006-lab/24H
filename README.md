@@ -20,7 +20,8 @@ python scripts/make_demo_bills.py # regenerate the fictitious demo bills + their
 ```
 
 Demo bills in `data/samples/` (all fictitious): `bill_01` clean, `bill_02` wrong total, `bill_03` missing patient name +
-duplicated medicine, `bill_04` clean pharmacy bill, `bill_05_photo` tilted/blurred phone photo of bill_01.
+duplicated medicine, `bill_04` clean pharmacy bill, `bill_05_photo` tilted/blurred phone photo of bill_01,
+`bill_06` lab invoice with a qty × rate mistake, `bill_07.pdf` clean hospital bill as a PDF (highlights on page 1).
 `claim_01` / `claim_02` are insurance claim forms for bill_01 / bill_02. Upload the bills first: claim_01 matches,
 claim_02 is flagged ("Claimed ₹6,530, but the matching bill adds up to ₹5,730").
 

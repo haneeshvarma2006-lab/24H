@@ -57,6 +57,14 @@ def union(boxes, size):
     return [round(x0 / W, 4), round(y0 / H, 4), round((x1 - x0) / W, 4), round((y1 - y0) / H, 4)]
 
 
+def first_page_png(pdf: bytes) -> bytes:
+    """Render page 1 of a PDF at ~200 dpi, sharp enough for OCR without upscaling."""
+    import pypdfium2
+    buf = io.BytesIO()
+    pypdfium2.PdfDocument(pdf)[0].render(scale=3).to_pil().save(buf, "PNG")
+    return buf.getvalue()
+
+
 def locate(data: bytes, doc: dict) -> dict:
     """{"total": [x, y, w, h], "line_items.2": [...], ...} for every value found on the image."""
     image = ImageOps.exif_transpose(Image.open(io.BytesIO(data)))  # phones store portrait photos sideways + a rotate flag

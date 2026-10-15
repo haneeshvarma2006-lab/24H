@@ -21,7 +21,7 @@ from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 from pydantic import BaseModel
 
 from backend.extract import FIELDS, extract
-from backend.locate import locate
+from backend.locate import first_page_png, locate
 from backend.validate import amount, cross_check, validate
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -102,18 +102,23 @@ def upload(file: UploadFile):
         doc = extract(data, file.content_type)
     except Exception as e:  # missing key, rate limit, network, bad model output
         raise HTTPException(502, f"Extraction failed: {e}")
-    doc["sources"] = {}
-    # shortcut: click-to-source only for images, PDFs would need page rendering first
-    if file.content_type.startswith("image/") and shutil.which("tesseract"):
-        try:
-            doc["sources"] = locate(data, doc)
-        except Exception:
-            pass  # highlights are a nice-to-have; never fail an upload over them
-
     # store under a hash name: the user's filename never touches the filesystem
     stored_as = hashlib.sha256(data).hexdigest()[:16] + TYPES[file.content_type]
     UPLOADS.mkdir(parents=True, exist_ok=True)
     (UPLOADS / stored_as).write_bytes(data)
+
+    doc["sources"], doc["preview"] = {}, False
+    try:  # highlights are a nice-to-have; never fail an upload over them
+        image = data
+        if file.content_type == "application/pdf":
+            # shortcut: highlights cover page 1 only; render more pages if multi-page bills matter
+            image = first_page_png(data)
+            (UPLOADS / (stored_as + ".png")).write_bytes(image)
+            doc["preview"] = True
+        if shutil.which("tesseract"):
+            doc["sources"] = locate(image, doc)
+    except Exception:
+        pass
 
     with db() as conn:
         issues = check(conn, doc)
@@ -151,6 +156,17 @@ def bill_file(bill_id: int):
     with db() as conn:
         row = load(conn, bill_id)
     return FileResponse(UPLOADS / row["stored_as"], media_type=row["mime_type"])
+
+
+@app.get("/bills/{bill_id}/preview")
+def bill_preview(bill_id: int):
+    """Page 1 of a PDF as an image, so the dashboard can draw highlights on it."""
+    with db() as conn:
+        row = load(conn, bill_id)
+    path = UPLOADS / (row["stored_as"] + ".png")
+    if not path.exists():
+        raise HTTPException(404, "No preview for this upload")
+    return FileResponse(path, media_type="image/png")
 
 
 class Correction(BaseModel):

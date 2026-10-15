@@ -1,0 +1,123 @@
+{
+  "document_type": "bill",
+  "fields": {
+    "patient_name": {
+      "value": "Kiran Rao",
+      "confidence": 1.0
+    },
+    "uhid": {
+      "value": "PD-1188",
+      "confidence": 1.0
+    },
+    "age": {
+      "value": "51",
+      "confidence": 1.0
+    },
+    "gender": {
+      "value": "Male",
+      "confidence": 1.0
+    },
+    "hospital_name": {
+      "value": "Precision Diagnostics",
+      "confidence": 1.0
+    },
+    "hospital_address": {
+      "value": "7 Station Road, Tirupati 517501",
+      "confidence": 1.0
+    },
+    "doctor": {
+      "value": "Dr. P. Shah",
+      "confidence": 1.0
+    },
+    "bill_no": {
+      "value": "PD-2291",
+      "confidence": 1.0
+    },
+    "bill_date": {
+      "value": "13-10-2026",
+      "confidence": 1.0
+    },
+    "admission_date": {
+      "value": "",
+      "confidence": 1.0
+    },
+    "discharge_date": {
+      "value": "",
+      "confidence": 1.0
+    },
+    "subtotal": {
+      "value": "3300",
+      "confidence": 1.0
+    },
+    "discount": {
+      "value": "0",
+      "confidence": 1.0
+    },
+    "tax": {
+      "value": "0",
+      "confidence": 1.0
+    },
+    "total": {
+      "value": "3300",
+      "confidence": 1.0
+    },
+    "insurer": {
+      "value": "",
+      "confidence": 1.0
+    },
+    "tpa": {
+      "value": "",
+      "confidence": 1.0
+    },
+    "policy_no": {
+      "value": "",
+      "confidence": 1.0
+    },
+    "claim_no": {
+      "value": "",
+      "confidence": 1.0
+    },
+    "claimed_amount": {
+      "value": "",
+      "confidence": 1.0
+    }
+  },
+  "line_items": [
+    {
+      "description": "Complete Blood Count",
+      "qty": "1",
+      "rate": "450",
+      "amount": "450",
+      "confidence": 1.0
+    },
+    {
+      "description": "Thyroid Profile",
+      "qty": "1",
+      "rate": "650",
+      "amount": "650",
+      "confidence": 1.0
+    },
+    {
+      "description": "Vitamin D (25-OH)",
+      "qty": "1",
+      "rate": "1200",
+      "amount": "1200",
+      "confidence": 1.0
+    },
+    {
+      "description": "HbA1c",
+      "qty": "2",
+      "rate": "400",
+      "amount": "900",
+      "confidence": 1.0
+    },
+    {
+      "description": "Home Sample Collection",
+      "qty": "1",
+      "rate": "100",
+      "amount": "100",
+      "confidence": 1.0
+    }
+  ],
+  "mistake": "HbA1c 2 x 400 printed as 900"
+}

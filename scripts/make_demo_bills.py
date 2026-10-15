@@ -54,6 +54,21 @@ BILLS = [
          items=[("Azithromycin 500mg (3 tabs)", "1", "72", "72"), ("Cetirizine 10mg (10 tabs)", "1", "18", "18"),
                 ("Cough Syrup 100ml", "2", "95", "190"), ("Vitamin C 500mg (15 tabs)", "1", "60", "60")],
          subtotal="340", discount="17", tax="16", total="339"),
+    dict(name="bill_06", style="pharmacy", title="LAB INVOICE", mistake="HbA1c 2 x 400 printed as 900",
+         hospital_name="Precision Diagnostics", hospital_address="7 Station Road, Tirupati 517501", doctor="Dr. P. Shah",
+         patient_name="Kiran Rao", uhid="PD-1188", age="51", gender="Male", bill_no="PD-2291",
+         bill_date="13-10-2026", admission_date="", discharge_date="", insurer="", policy_no="",
+         items=[("Complete Blood Count", "1", "450", "450"), ("Thyroid Profile", "1", "650", "650"),
+                ("Vitamin D (25-OH)", "1", "1200", "1200"), ("HbA1c", "2", "400", "900"),
+                ("Home Sample Collection", "1", "100", "100")],
+         subtotal="3300", discount="0", tax="0", total="3300"),
+    dict(name="bill_07", style="hospital", pdf=True, mistake=None, **HOSPITAL,
+         patient_name="Arjun Naidu", uhid="AC-20602", age="38", gender="Male", bill_no="INV-5560",
+         bill_date="14-10-2026", admission_date="12-10-2026", discharge_date="14-10-2026",
+         insurer="Suraksha Health", policy_no="P-7741-0093",
+         items=[("ICU Charges", "1", "4500", "4500"), ("Doctor Consultation", "3", "600", "1800"),
+                ("MRI Brain (Plain)", "1", "6500", "6500"), ("Medicines & Consumables", "1", "1340", "1340")],
+         subtotal="14140", discount="500", tax="0", total="13640"),
 ]
 
 
@@ -103,11 +118,12 @@ def html(b):
         <tr><td>Insurer: <b>{b['insurer'] or '-'}</b></td><td>Policy No: <b>{b['policy_no'] or '-'}</b></td></tr></table>"""
     else:
         head = f"""<div class=pharm><h1>{b['hospital_name']}</h1><p>{b['hospital_address']}<br>GSTIN 37ABCDE1234F1Z5 · DL No. 20/21-AP-1234</p></div>
-        <h2>TAX INVOICE</h2>
+        <h2>{b.get('title', 'TAX INVOICE')}</h2>
         <table class=meta><tr><td>Bill No: <b>{b['bill_no']}</b></td><td>Date: <b>{b['bill_date']}</b></td></tr>
         <tr><td>Patient: <b>{b['patient_name']}</b></td><td>Age/Sex: <b>{b['age']} {b['gender']}</b></td></tr>
         <tr><td colspan=2>Prescribed by: <b>{b['doctor']}</b></td></tr></table>"""
     return f"""<html><head><style>
+    @page{{size:{W}px {H}px;margin:0}}
     body{{margin:0;width:{W}px;height:{H}px;font-family:'DejaVu Sans',Arial,sans-serif;font-size:17px;color:#111;background:#fff}}
     .page{{padding:40px 50px}} h1{{margin:0;font-size:32px}} h2{{text-align:center;font-size:20px;letter-spacing:2px;border:2px solid #111;padding:6px;margin:22px 0}}
     .hosp{{text-align:center;border-bottom:3px double #111;padding-bottom:10px}} .pharm{{border-left:8px solid #2a7;padding-left:14px}}
@@ -143,7 +159,12 @@ def main():
             subprocess.run([CHROME, "--headless", "--no-sandbox", "--disable-gpu", "--hide-scrollbars",
                             f"--window-size={W},{H + 200}", f"--screenshot={shot}", page.as_uri()],
                            check=True, capture_output=True)
-            Image.open(shot).crop((0, 0, W, H)).convert("RGB").save(samples / f"{b['name']}.png")
+            if b.get("pdf"):  # hospitals mostly email PDFs
+                subprocess.run([CHROME, "--headless", "--no-sandbox", "--disable-gpu", "--no-pdf-header-footer",
+                                f"--print-to-pdf={samples / (b['name'] + '.pdf')}", page.as_uri()],
+                               check=True, capture_output=True)
+            else:
+                Image.open(shot).crop((0, 0, W, H)).convert("RGB").save(samples / f"{b['name']}.png")
             # claims are validated against bills, so the stand-alone eval verdict doesn't apply to them
             t = truth(b) if b in BILLS else truth(b | {"items": []}) | {"document_type": "claim_form", "check_verdict": False}
             (truths / f"{b['name']}.json").write_text(json.dumps(t, indent=2, ensure_ascii=False))

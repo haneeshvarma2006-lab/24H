@@ -310,10 +310,11 @@ function renderDetail() {
     <div class="panes">
       <div class="viewer" id="viewer">
         <div class="page">
-          ${b.mime_type === 'application/pdf'
+          ${b.mime_type === 'application/pdf' && !d.preview
             ? `<iframe src="/bills/${b.id}/file" title="Scan of ${esc(b.filename)}"></iframe>`
-            : `<img src="/bills/${b.id}/file" alt="Scan of ${esc(b.filename)}">${boxes}`}
+            : `<img src="/bills/${b.id}/${d.preview ? 'preview' : 'file'}" alt="Scan of ${esc(b.filename)}${d.preview ? ', page 1' : ''}">${boxes}`}
         </div>
+        ${d.preview ? `<p class="note"><a href="/bills/${b.id}/file" target="_blank" rel="noopener">Open the original PDF</a> · highlights show page 1</p>` : ''}
         <p class="note">${Object.keys(sources).length
           ? 'Hover or click a field to see where it was read on the scan.'
           : 'Highlights on the scan are available for image uploads.'}</p>
