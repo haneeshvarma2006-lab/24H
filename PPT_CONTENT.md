@@ -1,137 +1,79 @@
-# PPT content: Sprint 1 submission (due 4:30 PM)
+# PPT content: InnoHack 2.0 template (6 slides)
 
-10 slides. Copy the text exactly. **[brackets]** = something you fill in or a visual to add.
-Design: white background, one accent colour (teal or blue), one font (Poppins or Inter), maximum 5 bullets per slide, large text.
-
----
+Each heading below is a box in the official template. Paste the text into that box.
+Text in [brackets] is for you to fill in.
 
 ## Slide 1: Title
-- **ClaimLens**
-- *AI reads the bill. Math checks the AI. A human approves only what's uncertain.*
-- INNOHACKS 2.0 · AI Automation · Problem Statement #3: Hospital Bill and Insurance Reader
-- Team **[Team name]** · [Member 1], [Member 2], [Member 3], [Member 4] · [College]
+- **Project title:** CLAIMLENS
+- **Subtitle (optional, under the title):** AI Hospital Bill & Insurance Reader
+- **Team name:** [Team name]
+- **Team members:** [Member 1, Member 2, Member 3, Member 4]
+- **College:** [College name]
+- **Problem statement ID:** AI Automation – 3 (Hospital Bill and Insurance Reader)
 
-**Visual:** a crumpled hospital bill on the left, an arrow, a clean spreadsheet on the right.
+## Slide 2: Problem statement with problem ID
+**Title:** PROBLEM STATEMENT – AI AUTOMATION #3
 
----
+**Problem box:**
+Hospital Bill and Insurance Reader: hospital bills and insurance papers are long, messy and different at every hospital. Staff retype them by hand, which is slow and error-prone.
+- Every hospital uses its own layout, so no fixed template works
+- Manual retyping causes wrong amounts, missed line items, and rejected or delayed claims
+- Plain OCR gives raw text, not clean data, and never says when it is wrong
 
-## Slide 2: The Problem
-- Every hospital uses a **different bill format**: different layouts, item names and handwritten parts
-- Billing and insurance staff **retype every bill by hand** into spreadsheets and claim systems
-- Retyping is **slow and causes typos**: wrong amounts, missed items, rejected claims
-- **Overcharging goes unnoticed**: nobody compares each item against standard rates
-- Simple OCR tools give **raw text, not usable data**, and can't tell when they're wrong
+**Proposed solution box:**
+ClaimLens reads scanned bills and claim forms and returns clean, verified data ready for a spreadsheet or database.
+- **Extract:** a pretrained AI vision model pulls patient details, line-item charges, totals and claim data from any format
+- **Verify:** our rule engine checks the math (line items = subtotal, tax, grand total) and missing fields, with a confidence score per field
+- **Review & export:** only uncertain bills go to a human; one click to Excel, CSV or a database
 
-**Visual:** 3 different-looking hospital bills side by side, captioned "Same information, three formats".
+## Slide 3: Technology stack
+- **01 Programming languages:** Python, JavaScript, SQL
+- **02 Frontend technologies:** HTML5, CSS, JavaScript; a review dashboard that shows the scan and the extracted data side by side
+- **03 Backend technologies:** FastAPI (Python), Pydantic for data validation, pandas / openpyxl for Excel export
+- **04 Database and storage:** SQLite (MVP), PostgreSQL (production), local storage for uploaded scans
+- **05 AI/ML and APIs** (the template says "A/ML", so fix that typo): a pretrained vision AI model via API ([Claude / Gemini]), with no training needed; CORD, SROIE and FUNSD public datasets used to *measure* accuracy
+- **06 Cloud, deployment and dev tools:** Git and GitHub, VS Code, Postman; deploy on Render or Railway, or a local server
 
----
-
-## Slide 3: Who suffers
-| Who | Pain |
-|---|---|
-| Hospital billing desk | Hours of manual data entry every day |
-| Insurance (TPA) staff | Checking claims against bills line by line |
-| Patients | Delayed or rejected claims, overcharges they never notice |
-
----
-
-## Slide 4: Our Solution: ClaimLens
-Upload any bill or claim form (PDF or phone photo), get **clean, verified, structured data**.
-
-1. **Extract:** an AI vision model reads patient details, line items, charges and claim data
-2. **Validate:** our checks verify the math: items add up to the total, tax is correct, no required field is missing
-3. **Flag overcharges:** compare charges with government reference rates (CGHS package rates, NPPA drug ceiling prices)
-4. **Human-in-the-loop:** only uncertain or failed bills go to a reviewer
-5. **Export:** one click to Excel, CSV or a database
-
----
-
-## Slide 5: How it works (architecture)
-**Visual:** draw these as boxes with arrows:
+## Slide 4: Solution architecture & workflow diagram
+Draw 5 boxes left to right, joined by arrows:
 
 ```
-[Bill / Claim form upload]
-        ↓
-[AI Vision Extraction] → structured data + confidence per field
-        ↓
-[Validation Engine]  ← CGHS / NPPA reference rates
-   ├── All checks pass → ✅ Auto-approved
-   └── Fails / low confidence → ⚠️ Review queue → human fixes it
-        ↓
-[Dashboard] → [Excel / CSV / Database]
+[1. UPLOAD]  →  [2. AI EXTRACTION]  →  [3. VALIDATION]  --pass-->  [4. AUTO-APPROVED]  →  [5. OUTPUT]
+ Scanned bill /   Vision model →          Items = subtotal?            All checks pass,          Excel · CSV ·
+ claim form       patient, charges,       Tax right?                   high confidence           Database
+ (PDF / photo)    claim data +            Fields missing?
+                  confidence                    |
+                                     fail / low confidence
+                                                ↓
+                                   [HUMAN REVIEW QUEUE]  ───────────→  [5. OUTPUT]
+                                   Staff see scan + data side by side, fix, approve
 ```
+- Colours: boxes 1–3 light blue, box 4 blue, review box orange, output box navy.
+- Caption at the bottom: **"The AI only reads. Every number is checked by rules before it reaches the spreadsheet."**
 
-Caption: **"The AI only reads. Every number is checked by our rules before it's trusted."**
+## Slide 5: Key features & innovation showcase
+- **Feature 1, Reads any format:** any hospital's bill or claim form, PDF or phone photo. No templates, no training.
+- **Feature 2, Verifies the math:** checks line items against the subtotal, tax and grand total, plus missing fields. AI mistakes get caught.
+- **Feature 3, Confidence + review:** every field gets a confidence score. Only uncertain bills go to a human.
+- **Feature 4, Spreadsheet-ready:** clean structured data to Excel, CSV or a database in one click. Click any value to see where it was read on the scan.
 
----
+**What makes your solution unique?**
+Other tools trust the AI. ClaimLens checks it: every number is verified by rules before it is exported.
 
-## Slide 6: What makes us different (USP)
-| Typical solution | ClaimLens |
-|---|---|
-| Sends the bill to an AI model and trusts the answer | **Checks the math on every bill** and catches the AI's mistakes |
-| Gives text | Gives **structured data** ready for a spreadsheet or database |
-| One format only | **Any hospital's format**, no templates to set up |
-| No idea when it's wrong | **Confidence score per field** + review queue |
-| Just reads | **Detects overcharging** against government rates |
-| Black box | **Click any value** to see where it came from on the scan |
+**Your unique selling point:**
+Verified bill data in seconds instead of minutes of retyping, with a human only where it matters.
 
----
+## Slide 6: Impact, feasibility & future scope
+**Impact**
+- **Target users / beneficiaries:** hospital billing desks, insurance / TPA claim processors, and patients
+- **Expected benefits:** seconds per bill instead of minutes; fewer typing errors and claim rejections
+- **How will you measure success?** Field accuracy on labelled datasets (CORD, SROIE), time per bill, and the % of bills auto-approved
 
-## Slide 7: Tech stack
-- **Backend:** Python, FastAPI
-- **AI:** pretrained vision model ([Claude / Gemini], whichever key you use). **No training needed**, so it works on any format from day one
-- **Database:** SQLite (PostgreSQL in production)
-- **Frontend:** HTML / JavaScript dashboard
-- **Export:** Excel / CSV
-- **Evaluation data:** public labelled receipt and form datasets (CORD, SROIE, FUNSD) to **measure** accuracy
-- **Reference data:** CGHS rate list, NPPA ceiling price list
+**Future scope**
+- **Planned improvements:** overcharge alerts against government rates (CGHS / NPPA); a bill vs claim-form cross-check; regional-language bills
+- **Scalability or next steps:** an API for hospital and insurer systems; batch processing; can run on a model hosted by the hospital, for privacy
+- **Feasibility** (add as one line): built on proven pretrained models and open tools, with no training risk. MVP tonight, full app tomorrow.
 
----
-
-## Slide 8: Feasibility & plan
-| Phase | Deliverable |
-|---|---|
-| Sprint 1 (today) | Idea, architecture, datasets collected |
-| Sprint 2 (tonight) | MVP: upload → extract → validate → export |
-| Sprint 3 (tomorrow) | Review dashboard, overcharge detection, accuracy report |
-
-**Risk handling:**
-- AI misreads a field → low confidence or failed math check → human review. **Nothing wrong is exported silently**
-- Internet down → cached results for the demo bills
-- Patient privacy → demo uses only made-up data; in production it can run on a model hosted by the hospital
-
----
-
-## Slide 9: Impact
-- **Minutes → seconds** per bill (no manual retyping)
-- **Fewer claim rejections** caused by typing errors
-- **Overcharges caught automatically**, which protects patients
-- Staff review **only the uncertain bills**, not every bill
-- **Future:** regional-language bills, direct link to insurer/TPA systems, a patient app to check a bill before paying
-
----
-
-## Slide 10: Thank you
-- **ClaimLens:** *verified bill data, not just extracted text.*
-- Team [name] · [members]
-- [GitHub link: github.com/haneeshvarma2006-lab/24H]
-
----
-
-## Rules for the deck
-- **Do not invent statistics.** If you add a number (e.g. "X lakh claims per year"), it needs a source written on the slide. Judges check.
-- No paragraphs. If a bullet wraps to 3 lines, cut it.
-- Slides 4, 5 and 6 matter most. Spend your time there.
-- Results slide (accuracy %, time per bill) comes **tomorrow** with real numbers. Do not put fake numbers in today's deck.
-
-## Speaker notes (1 line per slide, if presenting)
-1. "We're ClaimLens. We turn messy hospital bills into verified data."
-2. "Every hospital bill looks different, so staff retype them by hand. It's slow and full of errors."
-3. "It hurts billing staff, insurers and, most of all, patients."
-4. "Upload any bill and we extract, validate, flag overcharges and export."
-5. "The AI only reads. Our validation engine decides what's trusted."
-6. "Other tools trust the AI. We check it."
-7. "No training needed. We use a pretrained model and measure it on public datasets."
-8. "MVP tonight, full app tomorrow, and every risk has a fallback."
-9. "Seconds instead of minutes, fewer rejected claims, patients protected."
-10. "Thank you. Happy to show a live demo."
+## Rules
+- No made-up statistics or accuracy numbers today. Real numbers come tomorrow.
+- Keep the template's fonts and colours. Body text no smaller than about 18pt (the slides are large).
