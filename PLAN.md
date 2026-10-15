@@ -142,3 +142,41 @@ Rules for the teammate:
 | Wi-Fi or the AI service dies during judging | `data/cache/` replays saved results + backup video |
 | "Just a wrapper" | Validation, overcharge check and review queue are ours; accuracy is measured |
 | AI misreads on stage | Shows up as low confidence -> review. We demo that on purpose |
+
+---
+
+## 8. Final decisions (merged with the team's plan)
+
+| Topic | Decision | Why |
+|---|---|---|
+| Extraction | **OCR (Tesseract) + vision AI model** | The AI reads the meaning. OCR gives word positions, which **click-to-source needs** (vision models return unreliable coordinates) |
+| Database | **SQLite** for the build, **PostgreSQL** named for production on the slides | No accounts, no network dependency, one file. MVP is due 11:30 PM |
+| Frontend | Next.js + Tailwind **only if the frontend owner has shipped Next.js before**; otherwise plain HTML + Tailwind CDN | Ship speed beats stack prestige. UX still matters: polish it in Sprint 3 |
+| Export | Excel + CSV + JSON | JSON costs nothing |
+| Click-to-source | **Sprint 3 core feature**, not a stretch goal | Biggest demo value |
+| Duplicate line-item check | **Add to validation** | Cheap rule, good demo error |
+| Overcharge (CGHS/NPPA), bill vs claim cross-check | **Stretch**, after 4:30 AM only if everything else works | Scope control |
+
+### Output schema (lock this now; everyone codes against it)
+Every leaf field is `{"value": ..., "confidence": 0.0-1.0}`.
+```json
+{
+  "document_type": "bill | claim_form",
+  "patient":   {"name", "uhid", "age", "gender"},
+  "hospital":  {"name", "address"},
+  "doctor":    "name",
+  "dates":     {"bill_date", "admission", "discharge"},
+  "bill_no":   "",
+  "line_items": [{"description", "qty", "rate", "amount"}],
+  "subtotal": 0, "discount": 0, "tax": 0, "total": 0,
+  "insurance": {"insurer", "tpa", "policy_no", "claim_no", "claimed_amount"}
+}
+```
+
+### Validation rules (validate.py)
+1. sum(line_items.amount) == subtotal (±1 rupee for rounding)
+2. subtotal - discount + tax == total (±1)
+3. qty × rate == amount for every line
+4. Required fields present: patient.name, hospital.name, bill_date, total
+5. No duplicate line items (same description + amount)
+6. Any field with confidence < 0.8 → review queue
