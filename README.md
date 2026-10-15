@@ -41,11 +41,25 @@ claim_02 is flagged ("Claimed ₹6,530, but the matching bill adds up to ₹5,73
 | `PATCH /bills/{id}` `{"field": "total", "value": "3450"}` | Human fix (also `line_items.2.amount`). Re-validates; saved as a correction |
 | `POST /bills/{id}/approve` | Reviewer accepts the bill as is |
 | `GET /export?format=xlsx\|csv\|json` | Spreadsheet-ready export |
+| `GET /samples`, `GET /samples/{name}` | The 9 fictitious demo documents (the start page's "Try the demo bills" button) |
+| `GET /health` | `{"ok": true}` for uptime monitors |
 
 Every issue is `{"field", "rule", "message"}`; `field` matches a key in `data.fields` or `line_items.N`, so the UI can highlight it.
 Rules: `required`, `line_math`, `duplicate`, `items_sum`, `total_math`, `low_confidence`.
 
 Extraction results are cached in `data/cache/` by file hash, so bills processed once still work with no internet.
+
+## Security
+
+- **Uploads:** only JPG/PNG/WEBP/PDF whose bytes really are that type, max 20 MB; image-bomb and giant-PDF limits;
+  files are stored under a hash name, never the user's filename.
+- **Abuse limits:** 40 uploads per IP per 10 min, at most 2 documents read at once, 500 documents stored.
+- **Browser:** Content-Security-Policy (only the dashboard's own script runs, by hash), every value from a scan is
+  HTML-escaped, `nosniff`, same-origin framing only, no referrer, HSTS. No CORS: other sites can't read the API.
+- **Cross-site writes:** every POST/PATCH needs the `X-Hayara: 1` header, which other websites can't send.
+- **Exports:** text that looks like an Excel formula is neutralised (`'=...`).
+- **Secrets:** API keys only in environment variables (`.env` is git-ignored); local mode needs no key at all.
+- **Known limit:** the public demo has no login, so anyone with the link can edit or approve its fictitious bills.
 
 ## Put it online (free)
 
