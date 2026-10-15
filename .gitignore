@@ -8,3 +8,4 @@ data/samples/cord_*
 data/samples/sroie_*
 data/truth/cord_*
 data/truth/sroie_*
+data/ocr_cache/

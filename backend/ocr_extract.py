@@ -85,7 +85,7 @@ def clean(value: str, field: str) -> str:
     return " ".join(value.split())
 
 
-def parse(lines: list[tuple[str, float]]) -> dict:
+def parse(lines: list[tuple[str, float]], learned: bool = True) -> dict:
     values, conf, items = {}, {}, []
     text = " ".join(t for t, _ in lines).lower()
     for text_line, c in lines:
@@ -121,6 +121,9 @@ def parse(lines: list[tuple[str, float]]) -> dict:
         if len(head) > 1 and re.search(r"\d", head[1][0]):
             values["hospital_address"] = re.split(r"\s*[-·•]\s*ph\b|\s+ph\s*[:.]", head[1][0], flags=re.I)[0].strip()
             conf["hospital_address"] = round(head[1][1], 2)
+    if learned:  # the trained field finder (scripts/train_fields.py), if one has been trained
+        from backend.field_model import apply
+        apply([t for t, _ in lines], values, conf)
     claim = "claim form" in text
     if claim:  # the only date on a claim form besides admission/discharge is the signature date
         values.pop("bill_date", None)

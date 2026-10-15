@@ -7,3 +7,4 @@ pillow==12.3.0
 pypdfium2==5.13.0
 pytest==9.1.1
 httpx==0.28.1
+scikit-learn==1.9.1

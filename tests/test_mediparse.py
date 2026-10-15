@@ -316,3 +316,15 @@ def test_local_ocr_reads_demo_bill_and_is_the_fallback(client, monkeypatch):
     monkeypatch.setattr(api, "extract", lambda *a: pytest.fail("AI must not be called in local mode"))
     r = client.post("/upload", files={"file": ("c.png", (root / "samples" / "bill_03.png").read_bytes(), "image/png")}).json()
     assert r["data"]["engine"] == "local OCR" and r["status"] == "review"
+
+
+def test_field_model_labels_lines_and_reads_values():
+    import importlib.util
+    from backend.field_model import featurize, value_from
+    spec = importlib.util.spec_from_file_location("train_fields", Path(__file__).resolve().parent.parent / "scripts" / "train_fields.py")
+    tf = importlib.util.module_from_spec(spec); spec.loader.exec_module(tf)
+    lines = ["TAN WOON YANN", "NO.53 JALAN BESAR", "DATE: 25/12/2018", "ITEM A 4.50", "SUBTOTAL 9.00", "TOTAL INCL GST 6% 9.00"]
+    labels = tf.label(lines, {"hospital_name": "TAN WOON YANN", "bill_date": "25/12/2018", "total": "9.00"})
+    assert labels == ["hospital_name", "other", "bill_date", "other", "other", "total"]  # total: lowest matching line
+    assert value_from(lines[5], "total") == "9.00" and value_from(lines[2], "bill_date") == "25-12-2018"
+    assert len(featurize(lines)) == 6 and "LASTMONEY" in featurize(lines)[5]
