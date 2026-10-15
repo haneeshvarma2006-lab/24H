@@ -88,18 +88,19 @@ Rules for the teammate:
 
 ---
 
-## 5. Timeline (24h, hard gates)
+## 5. Timeline (mapped to the official TECHSPARK schedule)
 
-| Hour | Goal | Gate |
-|---|---|---|
-| 0–1 | API key ready, datasets started downloading, output format fixed | Nobody waits on downloads: start coding with 3 sample bills from Google |
-| 1–6 | One bill goes all the way: upload -> extract -> validate -> saved | **Hour 6: must work end to end, even if it looks ugly** |
-| 6–12 | All checks + review queue + `eval.py` gives the first accuracy number | Drop whatever isn't working by hour 12 |
-| 12–16 | Dashboard: side-by-side viewer, click-to-source, Excel export | |
-| 16–18 | Overcharge check (CGHS / NPPA) + bill vs claim form cross-check | Stretch features. Skip them if behind |
-| **18** | **FEATURE FREEZE** | After this, only bug fixes |
-| 18–21 | Run every sample bill, fix bugs, save results to `data/cache/` | |
-| 21–24 | Final slides, rehearse the demo 3 times, record a backup video | |
+| When (IST) | Official slot | Us | Hard deadline |
+|---|---|---|---|
+| **Thu 1:00–4:30 PM** | Sprint 1: Problem Statement + PPT | Brother: PPT v1 (slides 1–3, 5, 7, 8; mockup for the demo slide). Coders: API key + `extract.py` working on 3 Google sample bills. Teammate: datasets | **PPT submitted by 5:00 PM** |
+| 5:00–7:30 PM | Sprint 2: MVP | `validate.py` + API + SQLite. One bill all the way: upload -> extract -> validate -> saved | |
+| 7:30–8:30 PM | Dinner | Eat. Leave `eval.py` running on CORD/SROIE | |
+| 8:30–11:30 PM | Sprint 2: MVP | Basic dashboard + review queue + Excel export | **MVP submitted by 11:30 PM** (ugly is fine, broken is not) |
+| Fri 12:01–1:30 AM | Networking / relax | Sleep in shifts. Nobody codes tired | |
+| 1:30–7:30 AM | Sprint 3: End Application | Click-to-source, confidence routing, first accuracy number, then overcharge check (CGHS/NPPA) + claim cross-check as stretch | |
+| **8:30 AM** | Sprint 3 | **FEATURE FREEZE.** Only bug fixes after this. Run every sample bill, save to `data/cache/` | |
+| 10:00 AM–1:00 PM | Verification & judge-dashboard prep | Final PPT with real accuracy numbers, record a backup video, rehearse the demo 3 times | **Final code + PPT by 1:00 PM** |
+| 4:00–4:30 PM | Evaluation | Present | |
 
 ---
 
