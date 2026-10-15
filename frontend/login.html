@@ -30,6 +30,10 @@
   .err { min-height: 20px; margin-top: 12px; color: #fca5a5; font-size: 13.5px; font-weight: 600; }
   .note { margin-top: 18px; font-size: 12px; color: #8792ad; text-align: center; }
   :focus-visible { outline: 3px solid #818cf8; outline-offset: 2px; }
+  @keyframes rise { from { opacity: 0; transform: translateY(16px) scale(.98); } }
+  .card { animation: rise .6s cubic-bezier(.2, .7, .2, 1); }
+  .logo { animation: rise .6s .15s cubic-bezier(.2, .7, .2, 1) backwards; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
 </style>
 </head>
 <body>
