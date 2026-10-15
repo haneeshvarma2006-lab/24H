@@ -12,7 +12,7 @@ from google.genai import types
 from pydantic import BaseModel, create_model
 
 # shortcut: model name is a guess at what the free tier offers today, override with GEMINI_MODEL if it 404s
-MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
 CACHE = Path(__file__).resolve().parent.parent / "data" / "cache"
 
 FIELDS = [
@@ -69,7 +69,8 @@ def extract(data: bytes, mime_type: str, use_cache: bool = True) -> dict:
     if use_cache and cached.exists():
         return json.loads(cached.read_text())
 
-    client = genai.Client()  # reads GEMINI_API_KEY from the environment
+    # reads GEMINI_API_KEY from the environment; retries 5xx ("high demand" 503s are common), not 429: daily quota will not clear in seconds
+    client = genai.Client(http_options=types.HttpOptions(retry_options=types.HttpRetryOptions(attempts=6, initial_delay=5, http_status_codes=[500, 502, 503, 504])))
     response = client.models.generate_content(
         model=MODEL,
         contents=[types.Part.from_bytes(data=data, mime_type=mime_type), PROMPT],
