@@ -214,14 +214,24 @@
   @media (max-width: 1250px) { .flow { display: none; } }
   @media (max-width: 1100px) {
     .stats { display: none; }
-    .panes { grid-template-columns: 1fr; overflow-y: auto; }
+    .panes { grid-template-columns: minmax(0, 1fr); overflow-y: auto; }
     .viewer, .data { overflow: visible; }
     .empty { grid-template-columns: 1fr; }
   }
   @media (max-width: 760px) {
-    .layout { grid-template-columns: 1fr; overflow-y: auto; }
+    .layout { grid-template-columns: minmax(0, 1fr); overflow-y: auto; }
     .brand span, .export span { display: none; }
     .mock { display: none; }
+    .keys { display: none; }
+    body { height: auto; }  /* phone: one page scroll instead of nested scroll boxes */
+    .layout, main, .panes { overflow: visible; }
+    .list { max-height: 45vh; }
+    .bar { flex-wrap: wrap; padding: 12px 16px; gap: 10px 14px; }
+    .bar .grow { flex: 1 1 calc(100% - 72px); }
+    .bar .btn { margin-left: auto; }
+    .data { padding: 16px; }
+    .field { grid-template-columns: 96px 1fr 40px; }
+    .w-num { width: 70px; }
   }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
@@ -512,6 +522,7 @@ async function select(id) {
   history.replaceState(null, '', `#bill/${id}`);
   fresh = true;  // play the scan sweep once when a bill opens, not on every save
   renderDetail();
+  if (matchMedia('(max-width: 760px)').matches) scrollTo(0, main.getBoundingClientRect().top + scrollY);  // phone: the bill sits below the list
   renderList();
 }
 
@@ -667,7 +678,7 @@ $('#tabs').addEventListener('click', e => {
 });
 list.addEventListener('click', e => {
   const b = e.target.closest('.item');
-  if (b) select(+b.dataset.id).then(() => list.querySelector('.item.on')?.focus());
+  if (b) select(+b.dataset.id).then(() => list.querySelector('.item.on')?.focus({ preventScroll: true }));
 });
 
 main.addEventListener('focusin', e => { if (e.target.dataset.key) highlight(e.target.dataset.key); });
