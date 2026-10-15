@@ -2,12 +2,14 @@
 Dashboard: http://127.0.0.1:8000/
 """
 import base64
+import contextvars
 import csv
 import hashlib
 import io
 import json
 import os
 import re
+import secrets
 import shutil
 import sqlite3
 import threading
@@ -16,7 +18,7 @@ from collections import defaultdict, deque
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import FileResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from openpyxl import Workbook
 from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
@@ -44,8 +46,9 @@ recent_uploads = defaultdict(deque)
 app = FastAPI(title="Hayara.ai", docs_url=None, redoc_url=None, openapi_url=None)
 
 # the dashboard's one inline script is allowed by its hash, so an injected <script> or onerror= never runs
-_script = re.search(r"<script>(.*?)</script>", (ROOT / "frontend" / "index.html").read_text(encoding="utf-8"), re.S).group(1)
-CSP = ("default-src 'self'; script-src 'sha256-" + base64.b64encode(hashlib.sha256(_script.encode()).digest()).decode() + "'; "
+_scripts = [m for page in ("index.html", "login.html")
+            for m in re.findall(r"<script>(.*?)</script>", (ROOT / "frontend" / page).read_text(encoding="utf-8"), re.S)]
+CSP = ("default-src 'self'; script-src " + " ".join(f"'sha256-{base64.b64encode(hashlib.sha256(x.encode()).digest()).decode()}'" for x in _scripts) + "; "
        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; "
        "img-src 'self' data: blob:; frame-src 'self'; frame-ancestors 'self'; object-src 'none'; base-uri 'none'; "
        "form-action 'self'; connect-src 'self'")
@@ -55,13 +58,38 @@ HEADERS = {"X-Content-Type-Options": "nosniff", "X-Frame-Options": "SAMEORIGIN",
            "Strict-Transport-Security": "max-age=31536000"}
 
 
+USER = contextvars.ContextVar("user")  # id of the signed-in user for this request
+PUBLIC = {"/health", "/login.html", "/auth/login", "/auth/signup"}
+SESSION_DAYS = 7
+
+
+def session_user(token: str | None):
+    if not token:
+        return None
+    with db() as conn:
+        row = conn.execute("SELECT user_id FROM sessions WHERE token = ? AND expires > ?",
+                           (hashlib.sha256(token.encode()).hexdigest(), time.time())).fetchone()
+    return row[0] if row else None
+
+
 @app.middleware("http")
 async def require_header(request: Request, call_next):
     # other websites can still fire simple cross-site POSTs; a custom header forces a CORS preflight they fail
     if request.method in ("POST", "PATCH") and request.headers.get("x-hayara") != "1":
         return Response("Missing X-Hayara header", status_code=403)
+    if request.url.path not in PUBLIC:
+        uid = session_user(request.cookies.get("hayara_session"))
+        if uid is None:  # every page and API call needs a signed-in user
+            if request.method == "GET" and request.url.path in ("/", "/index.html"):
+                response = RedirectResponse("/login.html", 303)
+            else:
+                response = Response('{"detail":"Please sign in"}', 401, media_type="application/json")
+            response.headers.update(HEADERS)
+            return response
+        USER.set(uid)
     response = await call_next(request)
     response.headers.update(HEADERS)
+    response.headers["Cache-Control"] = "no-store"  # signed-in pages and bill data never come back from a cache after sign-out
     if response.headers.get("content-type", "").startswith("text/html"):
         response.headers["Content-Security-Policy"] = CSP
     return response
@@ -99,16 +127,23 @@ def db():
         CREATE TABLE IF NOT EXISTS bills (
             id INTEGER PRIMARY KEY, filename TEXT, stored_as TEXT, mime_type TEXT,
             status TEXT, data TEXT, issues TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY, email TEXT UNIQUE, pw_hash TEXT, salt TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP);
+        CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, user_id INTEGER, expires REAL);
         -- every human fix is kept: future fine-tuning data
         CREATE TABLE IF NOT EXISTS corrections (
             id INTEGER PRIMARY KEY, bill_id INTEGER REFERENCES bills(id), field TEXT,
             ai_value TEXT, corrected_value TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP);
     """)
+    try:  # databases from before accounts existed
+        conn.execute("ALTER TABLE bills ADD COLUMN user_id INTEGER")
+    except sqlite3.OperationalError:
+        pass
     return conn
 
 
 def load(conn, bill_id):
-    row = conn.execute("SELECT * FROM bills WHERE id = ?", (bill_id,)).fetchone()
+    row = conn.execute("SELECT * FROM bills WHERE id = ? AND user_id = ?", (bill_id, USER.get())).fetchone()
     if row is None:
         raise HTTPException(404, "Bill not found")
     return row
@@ -119,7 +154,7 @@ def check(conn, doc):
     issues = validate(doc)
     if doc.get("document_type") == "claim_form":
         # shortcut: a claim is checked when uploaded or edited, not again when its bill is fixed later
-        bills = [(r["id"], json.loads(r["data"])) for r in conn.execute("SELECT id, data FROM bills ORDER BY id DESC")]
+        bills = [(r["id"], json.loads(r["data"])) for r in conn.execute("SELECT id, data FROM bills WHERE user_id = ? ORDER BY id DESC", (USER.get(),))]
         issues += cross_check(doc, [(i, d) for i, d in bills if d.get("document_type") == "bill"])
     return issues
 
@@ -131,6 +166,82 @@ def as_json(row):
 
 
 # plain def: FastAPI runs it in a thread, so slow Gemini/Tesseract calls don't freeze other requests
+class Credentials(BaseModel):
+    email: str = Field(min_length=3, max_length=254, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    password: str = Field(min_length=8, max_length=200)
+
+
+login_attempts = defaultdict(deque)
+
+
+def hash_password(password: str, salt: str) -> str:
+    return hashlib.scrypt(password.encode(), salt=bytes.fromhex(salt), n=2**14, r=8, p=1).hex()
+
+
+def start_session(request: Request, user_id: int) -> Response:
+    token = secrets.token_urlsafe(32)
+    with db() as conn:  # only the token's hash is stored: a leaked database can't be used to sign in
+        conn.execute("DELETE FROM sessions WHERE expires < ?", (time.time(),))
+        conn.execute("INSERT INTO sessions VALUES (?, ?, ?)",
+                     (hashlib.sha256(token.encode()).hexdigest(), user_id, time.time() + SESSION_DAYS * 86400))
+    response = Response('{"ok":true}', media_type="application/json")
+    response.set_cookie("hayara_session", token, max_age=SESSION_DAYS * 86400, httponly=True, samesite="strict",
+                        secure=request.url.scheme == "https")
+    return response
+
+
+def throttle_login(request: Request):
+    """10 sign-in attempts per IP per 10 minutes: password guessing stays slow."""
+    ip = request.client.host if request.client else "?"
+    now, hits = time.monotonic(), login_attempts[ip]
+    while hits and hits[0] < now - 600:
+        hits.popleft()
+    if len(hits) >= 10:
+        raise HTTPException(429, "Too many sign-in attempts. Wait 10 minutes.")
+    hits.append(now)
+
+
+@app.post("/auth/signup")
+def signup(creds: Credentials, request: Request):
+    throttle_login(request)
+    salt = secrets.token_hex(16)
+    try:
+        with db() as conn:
+            uid = conn.execute("INSERT INTO users (email, pw_hash, salt) VALUES (?, ?, ?)",
+                               (creds.email.lower(), hash_password(creds.password, salt), salt)).lastrowid
+    except sqlite3.IntegrityError:
+        raise HTTPException(409, "An account with this email already exists. Sign in instead.")
+    return start_session(request, uid)
+
+
+@app.post("/auth/login")
+def login(creds: Credentials, request: Request):
+    throttle_login(request)
+    with db() as conn:
+        row = conn.execute("SELECT id, pw_hash, salt FROM users WHERE email = ?", (creds.email.lower(),)).fetchone()
+    # same work and same answer whether or not the email exists
+    check_hash = hash_password(creds.password, row["salt"] if row else "00" * 16)
+    if not row or not secrets.compare_digest(check_hash, row["pw_hash"]):
+        raise HTTPException(401, "Wrong email or password")
+    return start_session(request, row["id"])
+
+
+@app.post("/auth/logout")
+def logout(request: Request):
+    with db() as conn:
+        conn.execute("DELETE FROM sessions WHERE token = ?",
+                     (hashlib.sha256(request.cookies.get("hayara_session", "").encode()).hexdigest(),))
+    response = Response('{"ok":true}', media_type="application/json")
+    response.delete_cookie("hayara_session")
+    return response
+
+
+@app.get("/auth/me")
+def me():
+    with db() as conn:
+        return {"email": conn.execute("SELECT email FROM users WHERE id = ?", (USER.get(),)).fetchone()[0]}
+
+
 @app.get("/health")
 def health():
     return {"ok": True}
@@ -166,7 +277,7 @@ def upload(file: UploadFile, request: Request):
         raise HTTPException(413, "File is larger than 20 MB")
     real_file(data, file.content_type)
     with db() as conn:
-        if conn.execute("SELECT COUNT(*) FROM bills").fetchone()[0] >= MAX_BILLS:
+        if conn.execute("SELECT COUNT(*) FROM bills WHERE user_id = ?", (USER.get(),)).fetchone()[0] >= MAX_BILLS:
             raise HTTPException(507, "Storage for this demo is full")
     if not READERS.acquire(timeout=120):
         raise HTTPException(503, "Server is busy reading other bills. Try again in a minute.")
@@ -229,8 +340,8 @@ def read_and_store(data: bytes, content_type: str, filename: str):
     with db() as conn:
         issues = check(conn, doc)
         cur = conn.execute(
-            "INSERT INTO bills (filename, stored_as, mime_type, status, data, issues) VALUES (?, ?, ?, ?, ?, ?)",
-            (filename, stored_as, content_type, "review" if issues else "approved",
+            "INSERT INTO bills (user_id, filename, stored_as, mime_type, status, data, issues) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (USER.get(), filename, stored_as, content_type, "review" if issues else "approved",
              json.dumps(doc), json.dumps(issues)))
         return as_json(load(conn, cur.lastrowid))
 
@@ -240,7 +351,7 @@ def bills(status: str | None = None):
     with db() as conn:
         rows = conn.execute(
             "SELECT *, (SELECT COUNT(*) FROM corrections c WHERE c.bill_id = bills.id) AS fixes FROM bills "
-            "WHERE ? IS NULL OR status = ? ORDER BY id DESC", (status, status)).fetchall()
+            "WHERE user_id = ? AND (? IS NULL OR status = ?) ORDER BY id DESC", (USER.get(), status, status)).fetchall()
     out = []
     for r in rows:
         d = json.loads(r["data"])
@@ -303,8 +414,8 @@ def correct(bill_id: int, fix: Correction):
         # a reviewer's approval survives edits unless the edit creates a new problem
         approved_issues = {(i["field"], i["rule"]) for i in json.loads(row["issues"])}
         kept = row["status"] == "approved" and all((i["field"], i["rule"]) in approved_issues for i in issues)
-        conn.execute("UPDATE bills SET data = ?, issues = ?, status = ? WHERE id = ?",
-                     (json.dumps(doc), json.dumps(issues), "approved" if kept or not issues else "review", bill_id))
+        conn.execute("UPDATE bills SET data = ?, issues = ?, status = ? WHERE id = ? AND user_id = ?",
+                     (json.dumps(doc), json.dumps(issues), "approved" if kept or not issues else "review", bill_id, USER.get()))
         return as_json(load(conn, bill_id))
 
 
@@ -313,14 +424,14 @@ def approve(bill_id: int):
     """Reviewer accepts the bill as is (e.g. a real duplicate charge)."""
     with db() as conn:
         load(conn, bill_id)
-        conn.execute("UPDATE bills SET status = 'approved' WHERE id = ?", (bill_id,))
+        conn.execute("UPDATE bills SET status = 'approved' WHERE id = ? AND user_id = ?", (bill_id, USER.get()))
         return as_json(load(conn, bill_id))
 
 
 @app.get("/export")
 def export(format: str = "xlsx"):
     with db() as conn:
-        rows = conn.execute("SELECT * FROM bills ORDER BY id").fetchall()
+        rows = conn.execute("SELECT * FROM bills WHERE user_id = ? ORDER BY id", (USER.get(),)).fetchall()
     docs = [as_json(r) for r in rows]
     if format == "json":
         return docs

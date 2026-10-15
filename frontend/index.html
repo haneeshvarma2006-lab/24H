@@ -19,6 +19,13 @@
     font-family: "Plus Jakarta Sans", Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     color: var(--ink); background: var(--bg);
   }
+  :root[data-theme="dark"] {
+    --bg: #0b1120; --panel: #111a2e; --ink: #e6ebf5; --muted: #9aa6bf; --line: #24304a;
+    --blue: #818cf8; --blue-soft: #1c2147; --blue-ink: #a5b4fc;
+    --orange-soft: #3a2410; --orange-ink: #fdba74; --green: #34d399; --green-soft: #0f2e25;
+    --red: #f87171; --red-soft: #3a1418; --field: #0b1224; --viewer: #070c18; --dot: #1b2540;
+    --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 24px rgb(0 0 0 / .3);
+  }
   * { box-sizing: border-box; }
   body { margin: 0; height: 100vh; display: flex; flex-direction: column; background: var(--bg); }
   button, input { font: inherit; color: inherit; }
@@ -129,7 +136,7 @@
   .bar .grow { flex: 1; min-width: 0; }
   .ring { --p: 0; --c: var(--green); flex: none; width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center;
           background: conic-gradient(var(--c) calc(var(--p) * 1%), #e8ebf2 0); }
-  .ring b { width: 44px; height: 44px; border-radius: 50%; background: #fff; display: grid; place-items: center; font-size: 11px; font-weight: 800; line-height: 1; letter-spacing: -.4px; }
+  .ring b { width: 44px; height: 44px; border-radius: 50%; background: var(--panel); display: grid; place-items: center; font-size: 11px; font-weight: 800; line-height: 1; letter-spacing: -.4px; }
   .ring small { display: block; font-size: 8.5px; font-weight: 700; color: var(--muted); letter-spacing: .4px; }
   .flow { display: flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 700; color: var(--muted); }
   .flow span { padding: 5px 9px; border-radius: 99px; background: var(--bg); white-space: nowrap; }
@@ -137,13 +144,17 @@
   .flow span.now { background: var(--orange-soft); color: var(--orange-ink); box-shadow: 0 0 0 2px rgb(240 135 34 / .3); }
   .flow span.no { background: var(--red-soft); color: var(--red); }
   .flow em { font-style: normal; color: #b5bccb; }
+  [data-theme="dark"] .btn:not(.ghost) { color: #06281d; }
+  .tool { border: 1px solid rgb(255 255 255 / .18); background: none; color: #fff; border-radius: 10px; padding: 8px 11px; font-weight: 700; font-size: 12.5px; }
+  .tool:hover { background: rgb(255 255 255 / .1); }
+  .who { font-size: 12px; color: #b9c2dc; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .btn { border: 0; border-radius: 10px; padding: 10px 16px; font-weight: 800; background: var(--green); color: #fff; white-space: nowrap;
          box-shadow: 0 4px 14px rgb(15 118 84 / .3); }
   .btn.ghost { background: var(--panel); color: var(--blue-ink); border: 1px solid #c7d2fe; box-shadow: none; }
   .btn:hover { filter: brightness(1.08); }
 
   .panes { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(430px, 1fr); }
-  .viewer { overflow: auto; padding: 18px; background: #dde2ec radial-gradient(#c9d0de 1px, transparent 1px) 0 0 / 18px 18px; }
+  .viewer { overflow: auto; padding: 18px; background: var(--viewer, #dde2ec) radial-gradient(var(--dot, #c9d0de) 1px, transparent 1px) 0 0 / 18px 18px; }
   .page { position: relative; max-width: 900px; margin: 0 auto; background: #fff; border-radius: 6px; overflow: hidden;
           box-shadow: 0 2px 4px rgb(11 22 48 / .08), 0 18px 40px rgb(11 22 48 / .18); }
   .page img { display: block; width: 100%; }
@@ -160,7 +171,7 @@
   .data h2 { font-size: 11.5px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin: 0 0 8px; font-weight: 800; }
 
   .checks { border-radius: var(--radius); padding: 14px 16px; }
-  .checks.ok { background: linear-gradient(135deg, #e1f6ec, #dff7f3); color: var(--green); font-weight: 700; }
+  .checks.ok { background: var(--green-soft); color: var(--green); font-weight: 700; }
   .checks.bad { background: var(--red-soft); }
   .checks.bad h2 { color: var(--red); }
   .checks.warn { background: var(--orange-soft); }
@@ -186,9 +197,9 @@
   summary small { font-weight: 500; color: var(--muted); }
   .field { display: grid; grid-template-columns: 130px 1fr 52px; align-items: center; gap: 8px; padding: 3px 0; }
   .field label { font-size: 12.5px; color: var(--muted); font-weight: 600; }
-  .field input, td input { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; background: #fbfcfe; font-size: 13.5px; }
+  .field input, td input { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; background: var(--field, #fbfcfe); font-size: 13.5px; }
   .field input:hover, td input:hover { border-color: #c3cad8; }
-  .field input:focus, td input:focus { outline: none; border-color: var(--blue); background: #fff; box-shadow: 0 0 0 3px rgb(79 70 229 / .18); }
+  .field input:focus, td input:focus { outline: none; border-color: var(--blue); background: #fff; box-shadow: 0 0 0 3px rgb(79 70 229 / .18); background: var(--field, #fff); }
   .field.err input, tr.err input { border-color: var(--red); background: var(--red-soft); }
   .field.warn input, tr.warn input { border-color: var(--orange); background: var(--orange-soft); }
   .msg { grid-column: 2 / 4; font-size: 12px; color: var(--red); margin: -1px 0 3px; font-weight: 600; }
@@ -249,6 +260,9 @@
     <a href="/export?format=csv">CSV</a>
     <a href="/export?format=json" download="hayara_export.json">JSON</a>
   </nav>
+  <button type="button" class="tool" id="theme" aria-label="Switch light or dark theme">◐</button>
+  <span class="who" id="who"></span>
+  <button type="button" class="tool" id="logout">Sign out</button>
 </header>
 
 <div class="layout">
@@ -273,6 +287,10 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
+// theme: saved choice, else the device's setting
+const savedTheme = (() => { try { return localStorage.getItem('theme'); } catch { return null; } })();
+document.documentElement.dataset.theme = savedTheme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
 const LABELS = {
   patient_name: 'Patient name', uhid: 'UHID', age: 'Age', gender: 'Gender',
   hospital_name: 'Hospital', hospital_address: 'Address', doctor: 'Doctor',
@@ -318,6 +336,10 @@ async function api(path, options = {}) {
     res = await fetch(path, { ...options, headers: { ...options.headers, 'X-Hayara': '1' } });
   } catch {  // offline, or the free server is asleep / restarting
     throw new Error("Can't reach the server. If it was idle it may be waking up: wait a minute and try again.");
+  }
+  if (res.status === 401) {  // session expired or signed out in another tab
+    location.replace('/login.html');
+    throw new Error('Please sign in');
   }
   const body = (res.headers.get('content-type') || '').includes('json') ? await res.json() : null;
   if (!res.ok) {
@@ -660,6 +682,16 @@ async function loadDemo(button) {
 
 /* ---------- events ---------- */
 
+$('#theme').addEventListener('click', () => {
+  const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = t;
+  try { localStorage.setItem('theme', t); } catch {}
+});
+$('#logout').addEventListener('click', async () => {
+  try { await api('/auth/logout', { method: 'POST' }); } catch {}
+  location.replace('/login.html');
+});
+
 document.addEventListener('click', e => { const b = e.target.closest('[data-demo]'); if (b) loadDemo(b); });
 
 $('#drop').addEventListener('click', () => fileInput.click());
@@ -712,6 +744,7 @@ main.addEventListener('click', async e => {
 (async () => {
   renderEmpty();
   try { await loadBills(); } catch (e) { return toast(e.message, 'error'); }
+  api('/auth/me').then(u => $('#who').textContent = u.email).catch(() => {});
   const id = +(location.hash.match(/^#bill\/(\d+)$/) || [])[1];
   if (id) select(id);
 })();

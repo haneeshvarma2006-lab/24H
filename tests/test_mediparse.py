@@ -82,7 +82,10 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setattr(api, "UPLOADS", tmp_path / "uploads")
     monkeypatch.setattr(api, "DEMO_CACHE", tmp_path / "no_demo_cache")  # tests read live
     monkeypatch.setattr(api, "extract", lambda data, mime: copy.deepcopy(make_doc(total="5200")))
-    return TestClient(api.app, headers={"X-Hayara": "1"})
+    c = TestClient(api.app, headers={"X-Hayara": "1"})
+    api.login_attempts.clear()
+    assert c.post("/auth/signup", json={"email": "test@hayara.ai", "password": "correct-horse"}).status_code == 200
+    return c
 
 
 def test_upload_review_correct_export(client):
@@ -224,7 +227,7 @@ def test_import_cord_and_sroie_then_score(tmp_path, monkeypatch):
 def test_cross_site_writes_and_bad_totals_blocked(client):
     plain = TestClient(api.app)  # what another website's form or no-cors fetch looks like
     assert plain.post("/upload", files={"file": ("b.jpg", JPG, "image/jpeg")}).status_code == 403
-    assert plain.get("/bills").status_code == 200
+    assert plain.get("/bills").status_code == 401  # not signed in
     assert rules(make_doc(total="illegible")) == ["required"]
 
 
@@ -408,3 +411,36 @@ def test_demo_documents_load_from_saved_engine_output(client, monkeypatch):
         r = client.post("/upload", files={"file": (name, data, "application/pdf" if name.endswith(".pdf") else "image/png")}).json()
         assert r["status"] == status and r["data"]["engine"] == "local OCR (precomputed demo)" and r["data"]["sources"]
     assert client.get("/bills/3/preview").headers["content-type"] == "image/png"  # the PDF still gets its page image
+
+
+def test_accounts_login_and_isolation(client):
+    other = TestClient(api.app, headers={"X-Hayara": "1"})
+    assert other.get("/bills").status_code == 401
+    assert other.get("/", follow_redirects=False).headers["location"] == "/login.html"
+    assert other.get("/login.html").status_code == 200 and other.get("/health").status_code == 200
+    assert other.post("/auth/signup", json={"email": "test@hayara.ai", "password": "another-pass"}).status_code == 409
+    assert other.post("/auth/login", json={"email": "test@hayara.ai", "password": "wrong-pass"}).status_code == 401
+    assert other.post("/auth/signup", json={"email": "not-an-email", "password": "longenough"}).status_code == 422
+    assert other.post("/auth/signup", json={"email": "b@x.io", "password": "short"}).status_code == 422
+    assert other.post("/auth/signup", json={"email": "b@x.io", "password": "second-user"}).status_code == 200
+    mine = client.post("/upload", files={"file": ("b.jpg", JPG, "image/jpeg")}).json()["id"]
+    # another account can't see, read, download, edit, approve or export my bill
+    assert other.get("/bills").json() == []
+    for r in [other.get(f"/bills/{mine}"), other.get(f"/bills/{mine}/file"),
+              other.patch(f"/bills/{mine}", json={"field": "total", "value": "1"}), other.post(f"/bills/{mine}/approve")]:
+        assert r.status_code == 404
+    assert other.get("/export", params={"format": "json"}).json() == []
+    with api.db() as conn:  # passwords and session tokens are never stored in the clear
+        assert "correct-horse" not in str(conn.execute("SELECT * FROM users").fetchall())
+        assert all(len(t[0]) == 64 for t in conn.execute("SELECT token FROM sessions"))
+    assert client.get("/auth/me").json()["email"] == "test@hayara.ai"
+    client.post("/auth/logout")
+    assert client.get("/bills").status_code == 401
+
+
+def test_login_is_throttled():
+    api.login_attempts.clear()
+    c = TestClient(api.app, headers={"X-Hayara": "1"})
+    codes = [c.post("/auth/login", json={"email": "x@y.io", "password": "guess-1234"}).status_code for _ in range(11)]
+    assert codes[:10] == [401] * 10 and codes[10] == 429
+    api.login_attempts.clear()

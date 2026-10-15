@@ -59,7 +59,10 @@ Extraction results are cached in `data/cache/` by file hash, so bills processed 
 - **Cross-site writes:** every POST/PATCH needs the `X-Hayara: 1` header, which other websites can't send.
 - **Exports:** text that looks like an Excel formula is neutralised (`'=...`).
 - **Secrets:** API keys only in environment variables (`.env` is git-ignored); local mode needs no key at all.
-- **Known limit:** the public demo has no login, so anyone with the link can edit or approve its fictitious bills.
+- **Accounts:** email + password sign-in; passwords stored as salted scrypt hashes, session tokens stored only as SHA-256 hashes, HttpOnly + SameSite=Strict cookies (Secure on HTTPS), 7-day expiry, sign-out deletes the session, 10 sign-in attempts per IP per 10 min, same answer for unknown email and wrong password.
+- **Isolation:** every bill, scan, edit, approval and export is scoped to the signed-in account; other accounts get 404.
+- **No caching:** `Cache-Control: no-store`, so nothing is shown from cache after sign-out.
+- **Known limits:** the free server keeps accounts in SQLite on a disk that is wiped on restart (sign up again after a restart); no email verification or password reset yet.
 
 ## Put it online (free)
 

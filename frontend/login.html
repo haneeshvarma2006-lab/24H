@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in · Hayara.ai</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Ctext x='16' y='23' font-size='20' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px; color: #e8ecf6;
+         font-family: "Plus Jakarta Sans", Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+         background: radial-gradient(120% 120% at 0% 0%, #2a2580 0%, #0b1630 50%, #062a33 100%); }
+  .card { width: 100%; max-width: 400px; padding: 32px 28px; border-radius: 20px; background: rgb(15 23 42 / .82);
+          border: 1px solid rgb(255 255 255 / .1); box-shadow: 0 30px 80px rgb(0 0 0 / .45); backdrop-filter: blur(8px); }
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+  .logo { width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center;
+          background: linear-gradient(135deg, #6366f1, #14b8a6); box-shadow: 0 6px 18px rgb(20 184 166 / .35); }
+  .brand strong { font-size: 22px; font-weight: 800; } .brand em { font-style: normal; color: #5eead4; }
+  h1 { font-size: 20px; margin: 0 0 4px; } p { margin: 0 0 20px; color: #a9b3cc; font-size: 14px; }
+  label { display: block; font-size: 13px; font-weight: 600; color: #c7cfe3; margin: 14px 0 6px; }
+  input { width: 100%; font: inherit; color: #fff; background: #0b1224; border: 1px solid #2c3a5a; border-radius: 10px; padding: 11px 12px; }
+  input:focus { outline: none; border-color: #818cf8; box-shadow: 0 0 0 3px rgb(129 140 248 / .3); }
+  button { font: inherit; cursor: pointer; }
+  .go { width: 100%; margin-top: 20px; border: 0; border-radius: 10px; padding: 12px; font-weight: 800; color: #fff;
+        background: linear-gradient(135deg, #6366f1, #4f46e5); box-shadow: 0 6px 18px rgb(79 70 229 / .45); }
+  .go:disabled { opacity: .6; }
+  .switch { margin-top: 16px; text-align: center; font-size: 14px; color: #a9b3cc; }
+  .switch button { border: 0; background: none; color: #a5b4fc; font-weight: 700; text-decoration: underline; padding: 0; }
+  .err { min-height: 20px; margin-top: 12px; color: #fca5a5; font-size: 13.5px; font-weight: 600; }
+  .note { margin-top: 18px; font-size: 12px; color: #8792ad; text-align: center; }
+  :focus-visible { outline: 3px solid #818cf8; outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="brand">
+    <div class="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M5 4v16M19 4v16M5 12h14"/><path d="M9 8l3-3 3 3" stroke-width="2"/></svg></div>
+    <strong>Hayara<em>.ai</em></strong>
+  </div>
+  <h1 id="title">Sign in</h1>
+  <p id="sub">Your bills stay in your own account.</p>
+  <form id="form" novalidate>
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="username" required maxlength="254">
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password" required minlength="8" maxlength="200">
+    <button class="go" id="go" type="submit">Sign in</button>
+    <div class="err" id="err" role="alert"></div>
+  </form>
+  <div class="switch"><span id="ask">New here?</span> <button type="button" id="mode">Create an account</button></div>
+  <div class="note">Passwords are stored as salted scrypt hashes. Sessions expire after 7 days.</div>
+</main>
+<script>
+let signup = false;
+const $ = s => document.querySelector(s);
+function setMode(on) {
+  signup = on;
+  $('#title').textContent = on ? 'Create your account' : 'Sign in';
+  $('#go').textContent = on ? 'Create account' : 'Sign in';
+  $('#ask').textContent = on ? 'Have an account?' : 'New here?';
+  $('#mode').textContent = on ? 'Sign in' : 'Create an account';
+  $('#password').autocomplete = on ? 'new-password' : 'current-password';
+  $('#err').textContent = '';
+}
+$('#mode').addEventListener('click', () => setMode(!signup));
+$('#form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const email = $('#email').value.trim(), password = $('#password').value;
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return $('#err').textContent = 'Enter a valid email address.';
+  if (password.length < 8) return $('#err').textContent = 'Password must be at least 8 characters.';
+  $('#go').disabled = true;
+  try {
+    const res = await fetch(signup ? '/auth/signup' : '/auth/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Hayara': '1' }, body: JSON.stringify({ email, password }),
+    });
+    if (res.ok) return location.replace('/');
+    const body = await res.json().catch(() => ({}));
+    $('#err').textContent = typeof body.detail === 'string' ? body.detail : 'Check your email and password.';
+  } catch {
+    $('#err').textContent = "Can't reach the server. If it was idle it may be waking up: wait a minute and try again.";
+  } finally {
+    $('#go').disabled = false;
+  }
+});
+</script>
+</body>
+</html>
