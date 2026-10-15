@@ -37,7 +37,7 @@ FORMATS = {"image/jpeg": "JPEG", "image/png": "PNG", "image/webp": "WEBP"}
 Image.MAX_IMAGE_PIXELS = 30_000_000  # PIL refuses images over 2x this: decompression bombs can't eat the server's RAM
 MAX_BILLS = 500                      # public demo on a small free disk
 UPLOADS_PER_WINDOW, WINDOW_SECONDS = 40, 600
-READERS = threading.BoundedSemaphore(2)  # OCR is CPU-heavy; a burst queues instead of starving the free instance
+READERS = threading.BoundedSemaphore(1)  # OCR is CPU- and RAM-heavy (3 Tesseract passes each): one at a time fits a 512 MB free instance
 recent_uploads = defaultdict(deque)
 
 # docs pages off: no public map of the API

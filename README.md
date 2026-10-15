@@ -53,7 +53,7 @@ Extraction results are cached in `data/cache/` by file hash, so bills processed 
 
 - **Uploads:** only JPG/PNG/WEBP/PDF whose bytes really are that type, max 20 MB; image-bomb and giant-PDF limits;
   files are stored under a hash name, never the user's filename.
-- **Abuse limits:** 40 uploads per IP per 10 min, at most 2 documents read at once, 500 documents stored.
+- **Abuse limits:** 40 uploads per IP per 10 min, one document read at a time, 500 documents stored.
 - **Browser:** Content-Security-Policy (only the dashboard's own script runs, by hash), every value from a scan is
   HTML-escaped, `nosniff`, same-origin framing only, no referrer, HSTS. No CORS: other sites can't read the API.
 - **Cross-site writes:** every POST/PATCH needs the `X-Hayara: 1` header, which other websites can't send.
