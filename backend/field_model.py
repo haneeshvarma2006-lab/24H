@@ -66,7 +66,8 @@ def apply(lines: list[str], values: dict, conf: dict, model=None) -> None:
     if model is None:
         return
     for field, (i, p) in predict(lines, model).items():
-        if p < model["threshold"] or (field in values and model["mode"].get(field) != "override"):
+        mode = model["mode"].get(field, "rules")  # unmeasured fields stay with the rules
+        if p < model["threshold"] or mode == "rules" or (field in values and mode != "override"):
             continue
         v = value_from(lines[i], field)
         if v:

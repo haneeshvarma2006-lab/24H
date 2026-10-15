@@ -328,3 +328,21 @@ def test_field_model_labels_lines_and_reads_values():
     assert labels == ["hospital_name", "other", "bill_date", "other", "other", "total"]  # total: lowest matching line
     assert value_from(lines[5], "total") == "9.00" and value_from(lines[2], "bill_date") == "25-12-2018"
     assert len(featurize(lines)) == 6 and "LASTMONEY" in featurize(lines)[5]
+
+
+def test_field_model_respects_measured_mode(monkeypatch):
+    import backend.field_model as fm
+    monkeypatch.setattr(fm, "predict", lambda lines, model: {"total": (0, 0.9), "bill_date": (1, 0.9)})
+    lines = ["TOTAL 9.00", "DATE 25/12/2018"]
+    model = {"threshold": 0.5, "mode": {"total": "rules", "bill_date": "fill"}}
+    values, conf = {}, {}
+    fm.apply(lines, values, conf, model)
+    assert values == {"bill_date": "25-12-2018"}  # "rules" mode never lets the model fill
+    values = {"bill_date": "01-01-2020"}
+    fm.apply(lines, values, conf, model)
+    assert values["bill_date"] == "01-01-2020"  # "fill" never overrides the rules
+
+
+def test_ocr_noise_comma_is_not_a_line_item():
+    from backend.ocr_extract import parse
+    assert parse([("faa , 17.60", 0.9)], learned=False)["line_items"] == []  # used to crash float(",")

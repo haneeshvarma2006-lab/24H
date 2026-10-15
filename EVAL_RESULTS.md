@@ -41,4 +41,26 @@ bill: 2 documents
 Not run: there is no CORD folder in `D:\datasets`.
 
 ## SROIE
-100 receipts imported from `D:\datasets\datasets\SROIE\archive\SROIE2019` (0 skipped). Eval not run yet (quota).
+600 receipts imported from `D:\datasets\datasets\SROIE\archive\SROIE2019` (0 skipped). Gemini eval not run (quota); used to train the local model below.
+
+## Trained local model
+Run 2026-10-15 on the laptop, no Gemini calls. 600 SROIE receipts imported (`--limit 600`, 0 skipped), OCR'd with Tesseract,
+`python scripts/train_fields.py`: 80/20 split by document (seed 42), no approved bills in `hayara.db` yet.
+```
+Training on 488 documents (14462 lines), testing on 121 held-out documents
+
+field               docs   rules   +fill  +override  -> using
+hospital_name        121     34%     34%        40%  -> override
+hospital_address     120      0%      0%         2%  -> rules
+patient_name           1    100%    100%       100%  -> rules
+bill_date            120     29%     50%        52%  -> fill
+total                120     20%     25%        40%  -> fill
+
+Held-out field accuracy: rules only 21.0%  ->  with trained model 28.8%  (482 fields)
+```
+Override measured best for bill_date (52%), total (40%) and hospital_address (2%), and with it the held-out score was 33.4%.
+But on the demo documents it changed bill_05_photo's date (08-10-2026 instead of 10-10-2026) and sent the clean bill_07.pdf
+to review (`low_confidence:total`). So `train_fields.py` caps those three fields at "fill" (`NO_OVERRIDE`).
+With the model as saved, the 9 demo documents in local mode give the same results as with rules only: bill_01, bill_04, bill_07, claim_01
+approved; bill_02 total_math, bill_03 required patient_name + duplicate, bill_06 line_math, claim_02 claim_match, bill_05_photo review (items_sum).
+These numbers are on SROIE (Malaysian shop receipts, labelled company/date/address/total only), not on hospital bills.

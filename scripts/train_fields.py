@@ -28,6 +28,8 @@ from eval import same  # noqa: E402
 
 FIELDS = ["hospital_name", "hospital_address", "patient_name", "bill_no", "bill_date", "subtotal", "tax", "total"]
 CACHE = ROOT / "data" / "ocr_cache"
+# override won on SROIE but broke demo bills (bill_05_photo date, bill_07 total sent to review): fill at most
+NO_OVERRIDE = {"hospital_address", "bill_date", "total"}
 
 
 def lines_for(data: bytes, mime: str) -> list[tuple[str, float]]:
@@ -145,7 +147,8 @@ def main():
     for f, s in score.items():
         if not s["n"]:
             continue
-        mode = max(("rules", "fill", "override"), key=lambda m: (s[m], m == "rules"))  # ties keep the rules
+        modes = ("rules", "fill") if f in NO_OVERRIDE else ("rules", "fill", "override")
+        mode = max(modes, key=lambda m: (s[m], m == "rules"))  # ties keep the rules
         model["mode"][f] = mode
         pct = lambda m: f"{s[m] / s['n']:.0%}"
         print(f"{f:18} {s['n']:>5} {pct('rules'):>7} {pct('fill'):>7} {pct('override'):>10}  -> {mode}")

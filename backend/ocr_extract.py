@@ -38,7 +38,7 @@ LABELS = [
 ]
 LABEL_RE = re.compile(r"(?<![\w-])(" + "|".join(f"(?:{p})" for p, _ in LABELS) + r")(?![\w])\s*[:=\-]?", re.I)
 MONEY = {"subtotal", "discount", "tax", "total", "claimed_amount"}
-NUM = r"[\d,]+(?:\.\d+)?"
+NUM = r"\d[\d,]*(?:\.\d+)?"  # leading digit: a lone OCR comma ("faa , 17.60") is not a number
 ITEM_RE = re.compile(rf"^\W*(?:\d{{1,3}}\s*[_|.\]]*\s+)?(.*?[A-Za-z].*?)\s+(?:(\d+(?:\.\d+)?)\s+)?({NUM})\s+({NUM})\s*$")
 
 
