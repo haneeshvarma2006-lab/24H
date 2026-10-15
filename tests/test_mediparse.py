@@ -268,3 +268,28 @@ def test_pdf_upload_gets_page_preview_and_highlights(client, monkeypatch):
     r = client.post("/upload", files={"file": ("bill.pdf", (root / "samples" / "bill_07.pdf").read_bytes(), "application/pdf")}).json()
     assert r["data"]["preview"] and {"total", "line_items.2"} <= set(r["data"]["sources"])
     assert client.get(f"/bills/{r['id']}/preview").headers["content-type"] == "image/png"
+
+
+def test_quota_falls_back_to_next_model_then_clear_message(client, monkeypatch, tmp_path):
+    import backend.extract as ex
+    from google.genai import errors
+    quota = errors.ClientError(429, {"error": {"message": "quota", "status": "RESOURCE_EXHAUSTED"}})
+    tried = []
+
+    def generate_content(model, **_):
+        tried.append(model)
+        if model == "a":
+            raise quota
+        return type("R", (), {"text": json.dumps(make_doc())})()
+
+    monkeypatch.setattr(ex.genai, "Client", lambda **_: type("C", (), {"models": type("M", (), {
+        "generate_content": staticmethod(generate_content)})})())
+    monkeypatch.setattr(ex, "MODELS", ["a", "b"])
+    monkeypatch.setattr(ex, "CACHE", tmp_path / "cache")
+    assert ex.extract(b"x", "image/png", use_cache=False)["fields"]["total"]["value"] == "3450" and tried == ["a", "b"]
+
+    def out_of_quota(data, mime):
+        raise quota
+    monkeypatch.setattr(api, "extract", out_of_quota)
+    r = client.post("/upload", files={"file": ("bill.jpg", b"img", "image/jpeg")})
+    assert r.status_code == 429 and r.json()["detail"].startswith("Gemini free quota is used up for today.")

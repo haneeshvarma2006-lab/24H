@@ -8,11 +8,11 @@ import os
 from pathlib import Path
 
 from google import genai
-from google.genai import types
+from google.genai import errors, types
 from pydantic import BaseModel, create_model
 
-# shortcut: model name is a guess at what the free tier offers today, override with GEMINI_MODEL if it 404s
-MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
+# GEMINI_MODEL can be a comma-separated list: the free tier quota is per model, so on a 429 the next one is tried
+MODELS = [m.strip() for m in os.environ.get("GEMINI_MODEL", "").split(",") if m.strip()] or ["gemini-3.8-flash"]
 CACHE = Path(__file__).resolve().parent.parent / "data" / "cache"
 
 FIELDS = [
@@ -71,15 +71,21 @@ def extract(data: bytes, mime_type: str, use_cache: bool = True) -> dict:
 
     # reads GEMINI_API_KEY from the environment; retries 5xx ("high demand" 503s are common), not 429: daily quota will not clear in seconds
     client = genai.Client(http_options=types.HttpOptions(retry_options=types.HttpRetryOptions(attempts=6, initial_delay=5, http_status_codes=[500, 502, 503, 504])))
-    response = client.models.generate_content(
-        model=MODEL,
-        contents=[types.Part.from_bytes(data=data, mime_type=mime_type), PROMPT],
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            response_schema=Extraction,
-            temperature=0,
-        ),
-    )
+    for i, model in enumerate(MODELS):
+        try:
+            response = client.models.generate_content(
+                model=model,
+                contents=[types.Part.from_bytes(data=data, mime_type=mime_type), PROMPT],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=Extraction,
+                    temperature=0,
+                ),
+            )
+            break
+        except errors.APIError as e:
+            if e.code != 429 or i == len(MODELS) - 1:
+                raise
     result = Extraction.model_validate_json(response.text).model_dump()
 
     CACHE.mkdir(parents=True, exist_ok=True)

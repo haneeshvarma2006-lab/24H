@@ -101,6 +101,9 @@ def upload(file: UploadFile):
     try:
         doc = extract(data, file.content_type)
     except Exception as e:  # missing key, rate limit, network, bad model output
+        if getattr(e, "code", None) == 429:
+            raise HTTPException(429, "Gemini free quota is used up for today. Bills already read still open; "
+                                     "try again later or switch model.")
         raise HTTPException(502, f"Extraction failed: {e}")
     # store under a hash name: the user's filename never touches the filesystem
     stored_as = hashlib.sha256(data).hexdigest()[:16] + TYPES[file.content_type]
