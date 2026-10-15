@@ -61,7 +61,9 @@ def first_page_png(pdf: bytes) -> bytes:
     """Render page 1 of a PDF at ~200 dpi, sharp enough for OCR without upscaling."""
     import pypdfium2
     buf = io.BytesIO()
-    pypdfium2.PdfDocument(pdf)[0].render(scale=3).to_pil().save(buf, "PNG")
+    page = pypdfium2.PdfDocument(pdf)[0]
+    w, h = page.get_size()  # points; a giant page at scale 3 would need gigabytes of RAM
+    page.render(scale=min(3, (25_000_000 / max(w * h, 1)) ** 0.5)).to_pil().save(buf, "PNG")
     return buf.getvalue()
 
 

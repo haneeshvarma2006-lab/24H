@@ -25,6 +25,18 @@ def make_doc(items=(("Room rent", "2", "1500", "3000"), ("CBC test", "1", "450",
     }
 
 
+def jpg(color="white") -> bytes:
+    """A real (tiny) JPEG: uploads must really be the type they claim."""
+    import io
+    from PIL import Image
+    buf = io.BytesIO()
+    Image.new("RGB", (8, 8), color).save(buf, "JPEG")
+    return buf.getvalue()
+
+
+JPG = jpg()
+
+
 def rules(doc):
     return sorted(i["rule"] for i in validate(doc))
 
@@ -73,11 +85,11 @@ def client(tmp_path, monkeypatch):
 
 
 def test_upload_review_correct_export(client):
-    r = client.post("/upload", files={"file": ("bill.jpg", b"fake-image", "image/jpeg")})
+    r = client.post("/upload", files={"file": ("bill.jpg", JPG, "image/jpeg")})
     assert r.status_code == 200 and r.json()["status"] == "review"
     bill_id = r.json()["id"]
 
-    assert client.get("/bills/1/file").content == b"fake-image"
+    assert client.get("/bills/1/file").content == JPG
     assert client.get("/bills", params={"status": "review"}).json()[0]["issue_count"] == 1
 
     r = client.patch(f"/bills/{bill_id}", json={"field": "total", "value": "3450"})
@@ -137,7 +149,7 @@ def test_bill_with_no_line_items_is_not_auto_approved():
 
 
 def test_approval_survives_unrelated_edit_but_not_new_problem(client):
-    bill_id = client.post("/upload", files={"file": ("bill.jpg", b"img", "image/jpeg")}).json()["id"]
+    bill_id = client.post("/upload", files={"file": ("bill.jpg", JPG, "image/jpeg")}).json()["id"]
     assert client.post(f"/bills/{bill_id}/approve").json()["status"] == "approved"   # wrong total, approved as is
     assert client.patch(f"/bills/{bill_id}", json={"field": "doctor", "value": "Dr. Rao"}).json()["status"] == "approved"
     r = client.patch(f"/bills/{bill_id}", json={"field": "subtotal", "value": "9999"}).json()
@@ -145,14 +157,14 @@ def test_approval_survives_unrelated_edit_but_not_new_problem(client):
 
 
 def test_export_keeps_scan_text_as_text(client):
-    bill_id = client.post("/upload", files={"file": ("=1+2.png", b"img", "image/png")}).json()["id"]
+    bill_id = client.post("/upload", files={"file": ("=1+2.jpg", JPG, "image/jpeg")}).json()["id"]
     client.patch(f"/bills/{bill_id}", json={"field": "doctor", "value": "=HYPERLINK(\"x\")\x0b"})
     from openpyxl import load_workbook
     import io
     sheet = load_workbook(io.BytesIO(client.get("/export").content))["Bills"]
     row = [c.value for c in sheet[2]]
-    assert row[1] == "'=1+2.png" and "'=HYPERLINK(\"x\")" in row and all(c.data_type != "f" for c in sheet[2])
-    assert "'=1+2.png" in client.get("/export", params={"format": "csv"}).text
+    assert row[1] == "'=1+2.jpg" and "'=HYPERLINK(\"x\")" in row and all(c.data_type != "f" for c in sheet[2])
+    assert "'=1+2.jpg" in client.get("/export", params={"format": "csv"}).text
 
 
 @pytest.mark.skipif(not shutil.which("tesseract"), reason="Tesseract not installed")
@@ -209,13 +221,13 @@ def test_import_cord_and_sroie_then_score(tmp_path, monkeypatch):
 
 def test_cross_site_writes_and_bad_totals_blocked(client):
     plain = TestClient(api.app)  # what another website's form or no-cors fetch looks like
-    assert plain.post("/upload", files={"file": ("b.jpg", b"img", "image/jpeg")}).status_code == 403
+    assert plain.post("/upload", files={"file": ("b.jpg", JPG, "image/jpeg")}).status_code == 403
     assert plain.get("/bills").status_code == 200
     assert rules(make_doc(total="illegible")) == ["required"]
 
 
 def test_export_amounts_are_numbers_and_first_ai_value_kept(client):
-    bill_id = client.post("/upload", files={"file": ("b.jpg", b"img", "image/jpeg")}).json()["id"]
+    bill_id = client.post("/upload", files={"file": ("b.jpg", JPG, "image/jpeg")}).json()["id"]
     client.patch(f"/bills/{bill_id}", json={"field": "total", "value": "3400"})
     client.patch(f"/bills/{bill_id}", json={"field": "total", "value": "3450"})
     with api.db() as conn:
@@ -246,9 +258,9 @@ def test_claim_cross_check():
 
 def test_claim_upload_checks_against_stored_bills(client, monkeypatch):
     monkeypatch.setattr(api, "extract", lambda data, mime: make_doc(policy_no="P-1"))
-    client.post("/upload", files={"file": ("bill.jpg", b"bill", "image/jpeg")})
+    client.post("/upload", files={"file": ("bill.jpg", jpg("red"), "image/jpeg")})
     monkeypatch.setattr(api, "extract", lambda data, mime: make_claim(claimed="5000"))
-    r = client.post("/upload", files={"file": ("claim.jpg", b"claim", "image/jpeg")}).json()
+    r = client.post("/upload", files={"file": ("claim.jpg", jpg("blue"), "image/jpeg")}).json()
     assert r["status"] == "review" and [i["rule"] for i in r["issues"]] == ["claim_match"]
     fixed = client.patch(f"/bills/{r['id']}", json={"field": "claimed_amount", "value": "3450"}).json()
     assert fixed["status"] == "approved"
@@ -285,7 +297,8 @@ def test_quota_falls_back_to_next_model_then_clear_message(client, monkeypatch, 
     def out_of_quota(data, mime):
         raise quota
     monkeypatch.setattr(api, "extract", out_of_quota)
-    r = client.post("/upload", files={"file": ("bill.jpg", b"img", "image/jpeg")})
+    monkeypatch.setattr(api, "ocr_extract", lambda data, mime: 1 / 0)  # local reader fails too
+    r = client.post("/upload", files={"file": ("bill.jpg", JPG, "image/jpeg")})
     assert r.status_code == 429 and r.json()["detail"].startswith("Gemini free quota is used up for today.")
 
 
@@ -340,3 +353,34 @@ def test_field_model_respects_measured_mode(monkeypatch):
 def test_ocr_noise_comma_is_not_a_line_item():
     from backend.ocr_extract import parse
     assert parse([("faa , 17.60", 0.9)], learned=False)["line_items"] == []  # used to crash float(",")
+
+
+def test_security_blocks(client, monkeypatch):
+    # disguised files: an HTML page or an EXE labelled as an image/PDF is refused
+    for name, data, mime in [("x.png", b"<html><script>alert(1)</script>", "image/png"), ("x.pdf", b"MZ\x90", "application/pdf"),
+                             ("x.png", JPG, "image/png")]:  # a JPEG wearing a PNG label
+        assert client.post("/upload", files={"file": (name, data, mime)}).status_code == 415
+    # browser hardening headers; the dashboard gets a strict script policy
+    page = client.get("/")
+    assert page.headers["x-content-type-options"] == "nosniff" and page.headers["x-frame-options"] == "SAMEORIGIN"
+    assert "script-src 'sha256-" in page.headers["content-security-policy"] and "unsafe-inline" not in page.headers["content-security-policy"].split("style-src")[0]
+    assert client.get("/docs").status_code == 404 and client.get("/openapi.json").status_code == 404
+    # oversized edits are refused
+    bill_id = client.post("/upload", files={"file": ("b.jpg", JPG, "image/jpeg")}).json()["id"]
+    assert client.patch(f"/bills/{bill_id}", json={"field": "total", "value": "9" * 501}).status_code == 422
+    # upload flood from one address is throttled
+    monkeypatch.setattr(api, "UPLOADS_PER_WINDOW", 2)
+    api.recent_uploads.clear()
+    codes = [client.post("/upload", files={"file": ("b.jpg", JPG, "image/jpeg")}).status_code for _ in range(3)]
+    assert codes == [200, 200, 429]
+    api.recent_uploads.clear()
+    monkeypatch.setattr(api, "MAX_BILLS", 1)
+    assert client.post("/upload", files={"file": ("b.jpg", JPG, "image/jpeg")}).status_code == 507
+
+
+def test_csp_hash_matches_dashboard_script():
+    import base64, hashlib, re
+    html = (Path(__file__).resolve().parent.parent / "frontend" / "index.html").read_text(encoding="utf-8")
+    scripts = re.findall(r"<script>(.*?)</script>", html, re.S)
+    assert len(scripts) == 1  # the CSP allows exactly one inline script
+    assert base64.b64encode(hashlib.sha256(scripts[0].encode()).digest()).decode() in api.CSP

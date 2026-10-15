@@ -10,7 +10,7 @@ pip install -r requirements.txt
 export GEMINI_API_KEY=...        # Windows: setx GEMINI_API_KEY "..." then open a new terminal
 uvicorn backend.app:app --reload
 ```
-Open **http://127.0.0.1:8000/** for the dashboard (http://127.0.0.1:8000/docs lists every API endpoint).
+Open **http://127.0.0.1:8000/** for the dashboard.
 Click-to-source highlights need Tesseract on the PATH (`tesseract --version`); without it everything else still works.
 
 **No AI quota? Still works.** If Gemini fails (quota used up, no internet, no key), Hayara reads the bill locally

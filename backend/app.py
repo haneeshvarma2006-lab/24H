@@ -1,6 +1,7 @@
 """Hayara.ai API + dashboard. Run from the repo root:  uvicorn backend.app:app --reload
-Dashboard: http://127.0.0.1:8000/   API test page: http://127.0.0.1:8000/docs
+Dashboard: http://127.0.0.1:8000/
 """
+import base64
 import csv
 import hashlib
 import io
@@ -9,6 +10,9 @@ import os
 import re
 import shutil
 import sqlite3
+import threading
+import time
+from collections import defaultdict, deque
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request, UploadFile
@@ -16,7 +20,8 @@ from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from openpyxl import Workbook
 from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
-from pydantic import BaseModel
+from PIL import Image
+from pydantic import BaseModel, Field
 
 from backend.extract import FIELDS, extract
 from backend.locate import first_page_png, locate
@@ -28,8 +33,26 @@ DB = ROOT / "hayara.db"
 UPLOADS = ROOT / "data" / "uploads"
 MAX_BYTES = 20 * 1024 * 1024
 TYPES = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp", "application/pdf": ".pdf"}
+FORMATS = {"image/jpeg": "JPEG", "image/png": "PNG", "image/webp": "WEBP"}
+Image.MAX_IMAGE_PIXELS = 30_000_000  # PIL refuses images over 2x this: decompression bombs can't eat the server's RAM
+MAX_BILLS = 500                      # public demo on a small free disk
+UPLOADS_PER_WINDOW, WINDOW_SECONDS = 40, 600
+READERS = threading.BoundedSemaphore(2)  # OCR is CPU-heavy; a burst queues instead of starving the free instance
+recent_uploads = defaultdict(deque)
 
-app = FastAPI(title="Hayara.ai")
+# docs pages off: no public map of the API
+app = FastAPI(title="Hayara.ai", docs_url=None, redoc_url=None, openapi_url=None)
+
+# the dashboard's one inline script is allowed by its hash, so an injected <script> or onerror= never runs
+_script = re.search(r"<script>(.*?)</script>", (ROOT / "frontend" / "index.html").read_text(encoding="utf-8"), re.S).group(1)
+CSP = ("default-src 'self'; script-src 'sha256-" + base64.b64encode(hashlib.sha256(_script.encode()).digest()).decode() + "'; "
+       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; "
+       "img-src 'self' data: blob:; frame-src 'self'; frame-ancestors 'self'; object-src 'none'; base-uri 'none'; "
+       "form-action 'self'; connect-src 'self'")
+HEADERS = {"X-Content-Type-Options": "nosniff", "X-Frame-Options": "SAMEORIGIN", "Referrer-Policy": "no-referrer",
+           "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
+           "Cross-Origin-Opener-Policy": "same-origin", "Cross-Origin-Resource-Policy": "same-origin",
+           "Strict-Transport-Security": "max-age=31536000"}
 
 
 @app.middleware("http")
@@ -37,7 +60,36 @@ async def require_header(request: Request, call_next):
     # other websites can still fire simple cross-site POSTs; a custom header forces a CORS preflight they fail
     if request.method in ("POST", "PATCH") and request.headers.get("x-hayara") != "1":
         return Response("Missing X-Hayara header", status_code=403)
-    return await call_next(request)
+    response = await call_next(request)
+    response.headers.update(HEADERS)
+    if response.headers.get("content-type", "").startswith("text/html"):
+        response.headers["Content-Security-Policy"] = CSP
+    return response
+
+
+def rate_limit(ip: str):
+    """At most UPLOADS_PER_WINDOW uploads per IP per WINDOW_SECONDS (in memory: resets on restart)."""
+    now, hits = time.monotonic(), recent_uploads[ip]
+    while hits and hits[0] < now - WINDOW_SECONDS:
+        hits.popleft()
+    if len(hits) >= UPLOADS_PER_WINDOW:
+        raise HTTPException(429, "Too many uploads from your network. Please wait a few minutes.")
+    hits.append(now)
+
+
+def real_file(data: bytes, mime: str):
+    """The browser's type label is user input: the bytes must really be that kind of file."""
+    try:
+        if mime == "application/pdf":
+            import pypdfium2
+            ok = b"%PDF-" in data[:1024] and len(pypdfium2.PdfDocument(data)) > 0
+        else:
+            with Image.open(io.BytesIO(data)) as im:
+                ok = im.format == FORMATS[mime]
+    except Exception:  # corrupt, truncated, decompression bomb
+        ok = False
+    if not ok:
+        raise HTTPException(415, "This file is damaged or is not really a JPG, PNG, WEBP or PDF")
 
 
 def db():
@@ -85,26 +137,40 @@ def health():
 
 
 @app.post("/upload")
-def upload(file: UploadFile):
+def upload(file: UploadFile, request: Request):
+    rate_limit(request.client.host if request.client else "?")
     if file.content_type not in TYPES:
         raise HTTPException(415, "Upload a JPG, PNG, WEBP or PDF")
     if (file.size or 0) > MAX_BYTES:
         raise HTTPException(413, "File is larger than 20 MB")
-    data = file.file.read()
+    data = file.file.read(MAX_BYTES + 1)
     if len(data) > MAX_BYTES:
         raise HTTPException(413, "File is larger than 20 MB")
+    real_file(data, file.content_type)
+    with db() as conn:
+        if conn.execute("SELECT COUNT(*) FROM bills").fetchone()[0] >= MAX_BILLS:
+            raise HTTPException(507, "Storage for this demo is full")
+    if not READERS.acquire(timeout=120):
+        raise HTTPException(503, "Server is busy reading other bills. Try again in a minute.")
+    try:
+        return read_and_store(data, file.content_type, (file.filename or "upload")[:200])
+    finally:
+        READERS.release()
+
+
+def read_and_store(data: bytes, content_type: str, filename: str):
     # EXTRACTOR=local skips the AI entirely; otherwise Gemini, with local OCR when it is unavailable
     local, doc, ai_error = os.environ.get("EXTRACTOR") == "local", None, None
     if not local:
         try:
-            doc, engine = extract(data, file.content_type), "Gemini"
+            doc, engine = extract(data, content_type), "Gemini"
         except Exception as e:  # missing key, quota (429), network, bad model output
             ai_error = e
     if doc is None:
         try:
             if not shutil.which("tesseract"):
                 raise RuntimeError("Tesseract is not installed")
-            doc, engine = ocr_extract(data, file.content_type), "local OCR"
+            doc, engine = ocr_extract(data, content_type), "local OCR"
         except Exception as e:
             if getattr(ai_error, "code", None) == 429:
                 raise HTTPException(429, "Gemini free quota is used up for today. Bills already read still open; "
@@ -112,14 +178,14 @@ def upload(file: UploadFile):
             raise HTTPException(502, f"Extraction failed: {ai_error or e}")
     doc["engine"] = engine
     # store under a hash name: the user's filename never touches the filesystem
-    stored_as = hashlib.sha256(data).hexdigest()[:16] + TYPES[file.content_type]
+    stored_as = hashlib.sha256(data).hexdigest()[:16] + TYPES[content_type]
     UPLOADS.mkdir(parents=True, exist_ok=True)
     (UPLOADS / stored_as).write_bytes(data)
 
     doc["sources"], doc["preview"] = {}, False
     try:  # highlights are a nice-to-have; never fail an upload over them
         image = data
-        if file.content_type == "application/pdf":
+        if content_type == "application/pdf":
             # shortcut: highlights cover page 1 only; render more pages if multi-page bills matter
             image = first_page_png(data)
             (UPLOADS / (stored_as + ".png")).write_bytes(image)
@@ -133,7 +199,7 @@ def upload(file: UploadFile):
         issues = check(conn, doc)
         cur = conn.execute(
             "INSERT INTO bills (filename, stored_as, mime_type, status, data, issues) VALUES (?, ?, ?, ?, ?, ?)",
-            (file.filename, stored_as, file.content_type, "review" if issues else "approved",
+            (filename, stored_as, content_type, "review" if issues else "approved",
              json.dumps(doc), json.dumps(issues)))
         return as_json(load(conn, cur.lastrowid))
 
@@ -179,8 +245,8 @@ def bill_preview(bill_id: int):
 
 
 class Correction(BaseModel):
-    field: str  # "total" or "line_items.2.amount"
-    value: str
+    field: str = Field(max_length=40)  # "total" or "line_items.2.amount"
+    value: str = Field(max_length=500)
 
 
 @app.patch("/bills/{bill_id}")
