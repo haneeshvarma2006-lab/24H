@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="560" viewBox="0 0 1800 560" font-family="Inter, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#102A43"/></marker>
+    <marker id="o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#F08722"/></marker>
+  </defs>
+  <rect width="1800" height="560" fill="#FFFFFF"/>
+  <g font-size="20" fill="#102A43" text-anchor="middle">
+    <!-- row 1 -->
+    <rect x="20" y="30" width="300" height="190" rx="18" fill="#E7F0FE" stroke="#0A65F7" stroke-width="3"/>
+    <text x="170" y="85" font-size="25" font-weight="700">1. UPLOAD</text>
+    <text x="170" y="125">Scanned bill or</text><text x="170" y="152">claim form</text><text x="170" y="179">PDF · phone photo</text>
+
+    <rect x="380" y="30" width="300" height="190" rx="18" fill="#E7F0FE" stroke="#0A65F7" stroke-width="3"/>
+    <text x="530" y="85" font-size="25" font-weight="700">2. AI EXTRACTION</text>
+    <text x="530" y="125">Vision model reads</text><text x="530" y="152">patient, charges,</text><text x="530" y="179">claim data + confidence</text>
+
+    <rect x="740" y="30" width="300" height="190" rx="18" fill="#E7F0FE" stroke="#0A65F7" stroke-width="3"/>
+    <text x="890" y="85" font-size="25" font-weight="700">3. VALIDATION</text>
+    <text x="890" y="125">Items = subtotal?</text><text x="890" y="152">Tax correct?</text><text x="890" y="179">Fields missing?</text>
+
+    <rect x="1100" y="30" width="300" height="190" rx="18" fill="#0A65F7" stroke="#0A65F7" stroke-width="3"/>
+    <text x="1250" y="98" font-size="25" font-weight="700" fill="#FFFFFF">4. AUTO-APPROVED</text>
+    <text x="1250" y="138" fill="#FFFFFF">All checks pass,</text><text x="1250" y="165" fill="#FFFFFF">high confidence</text>
+
+    <rect x="1460" y="30" width="320" height="190" rx="18" fill="#102A43" stroke="#102A43" stroke-width="3"/>
+    <text x="1620" y="98" font-size="25" font-weight="700" fill="#FFFFFF">5. OUTPUT</text>
+    <text x="1620" y="138" fill="#FFFFFF">Clean structured data</text><text x="1620" y="165" fill="#FFFFFF">Excel · CSV · Database</text>
+
+    <!-- row 2 -->
+    <rect x="740" y="340" width="660" height="160" rx="18" fill="#FDEEDD" stroke="#F08722" stroke-width="3"/>
+    <text x="1070" y="395" font-size="25" font-weight="700">HUMAN REVIEW QUEUE</text>
+    <text x="1070" y="435">Scan + extracted data side by side</text><text x="1070" y="462">Staff fix the flagged field and approve</text>
+
+    <text x="20" y="390" font-size="25" font-weight="700" fill="#0A65F7" text-anchor="start">Why it's trustworthy</text>
+    <text x="20" y="430" text-anchor="start">The AI only reads.</text>
+    <text x="20" y="457" text-anchor="start">Every number is checked by rules</text>
+    <text x="20" y="484" text-anchor="start">before it reaches the spreadsheet.</text>
+  </g>
+  <!-- arrows -->
+  <g stroke="#102A43" stroke-width="5" fill="none" marker-end="url(#a)">
+    <line x1="320" y1="125" x2="374" y2="125"/>
+    <line x1="680" y1="125" x2="734" y2="125"/>
+    <line x1="1040" y1="125" x2="1094" y2="125"/>
+    <line x1="1400" y1="125" x2="1454" y2="125"/>
+  </g>
+  <text x="1070" y="105" font-size="19" font-weight="700" fill="#0A65F7" text-anchor="middle">pass</text>
+  <g stroke="#F08722" stroke-width="5" fill="none" marker-end="url(#o)">
+    <line x1="890" y1="220" x2="890" y2="334"/>
+    <path d="M1400 420 H1620 V226"/>
+  </g>
+  <text x="905" y="285" font-size="19" font-weight="700" fill="#F08722">fail / low confidence</text>
+  <text x="1605" y="330" font-size="19" font-weight="700" fill="#F08722" text-anchor="end">fixed &amp; approved</text>
+</svg>
