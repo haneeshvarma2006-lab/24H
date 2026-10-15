@@ -3,3 +3,4 @@ __pycache__/
 hayara.db
 data/uploads/
 .pytest_cache/
+data/cache/
