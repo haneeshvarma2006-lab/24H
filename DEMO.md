@@ -15,6 +15,7 @@ Open http://127.0.0.1:8001/ . Keep `D:\24H\data\samples` open in Explorer. Charg
 |---|---|---|
 | Gemini 3.8 Flash (cloud AI) | 6 demo bills, fresh calls (`EVAL_RESULTS.md`) | **82/85 fields (96.5%)**, **28/28 line items**, **6/6 correct verdicts** |
 | Local mode (Tesseract OCR + rules, no internet) | all 9 demo documents | **121/124 fields (97.6%)**, 28/33 line items (blurry photo's table unread → sent to review) |
+| Our trained field finder (local, CPU) | 600 SROIE receipts, 20% held out | held-out field accuracy **21.0% → 28.8%** vs rules alone (shop receipts, a much harder layout than our bills) |
 | Validation | 4 documents with planted mistakes | **4/4 caught**: wrong total, missing name + duplicate medicine, qty×rate error, over-claim |
 | Validation | 4 clean documents | **4/4 auto-approved** |
 
@@ -39,7 +40,7 @@ Honest limits: tested on our 9 demo documents; the free Gemini tier allows 20 ca
 8. Close: *"AI reads the bill. Math checks the AI. A human approves only what's uncertain."*
 
 ## Judge Q&A
-- **Did you train a model?** No, on purpose. Pretrained vision AI + our own validation layer. We measured accuracy instead of training on a few hundred images.
+- **Did you train a model?** Yes, a small one, on purpose. Our own field finder (TF-IDF + logistic regression on OCR lines) trained on 600 SROIE receipts on a laptop CPU: held-out field accuracy rose from 21% to 29% over rules alone. It only takes over a field where it measured better, and it retrains from every bill a reviewer approves. The heavy reading is done by a pretrained vision AI when available, or locally by OCR.
 - **What if the AI is wrong?** Every number is checked by rules (totals, tax, qty × rate, duplicates, claim vs bill). Low-confidence fields go to a human. Nothing wrong is exported silently.
 - **What if the internet or the AI quota fails?** It switches to fully local OCR automatically. You're watching that mode now.
 - **Privacy?** Local mode never sends the bill anywhere. Demo data is fictitious.
