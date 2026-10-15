@@ -215,7 +215,7 @@
   .w-qty { width: 56px; }
   td input.num, .field input.num { text-align: right; }
 
-  .toast { position: fixed; bottom: 22px; left: 50%; transform: translate(-50%, 12px); background: var(--ink); color: #fff; padding: 12px 18px;
+  .toast { position: fixed; bottom: 22px; left: 50%; transform: translate(-50%, 12px); background: #0b1630; color: #fff; border: 1px solid rgb(255 255 255 / .12); padding: 12px 18px;
            border-radius: 12px; font-size: 14px; font-weight: 600; box-shadow: 0 12px 30px rgb(11 22 48 / .3); opacity: 0; pointer-events: none;
            transition: opacity .2s, transform .2s; max-width: 90vw; }
   .toast.show { opacity: 1; transform: translate(-50%, 0); }
@@ -223,6 +223,7 @@
   .toast.good { background: var(--green); }
 
   @media (max-width: 1250px) { .flow { display: none; } }
+  @media (max-width: 1500px) { .brand span, .who, .export > span { display: none; } }
   @media (max-width: 1100px) {
     .stats { display: none; }
     .panes { grid-template-columns: minmax(0, 1fr); overflow-y: auto; }
@@ -260,7 +261,7 @@
     <a href="/export?format=csv">CSV</a>
     <a href="/export?format=json" download="hayara_export.json">JSON</a>
   </nav>
-  <button type="button" class="tool" id="theme" aria-label="Switch light or dark theme">◐</button>
+  <button type="button" class="tool" id="theme" aria-label="Switch light or dark theme" title="Light / dark">☾ Theme</button>
   <span class="who" id="who"></span>
   <button type="button" class="tool" id="logout">Sign out</button>
 </header>
