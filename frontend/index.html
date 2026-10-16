@@ -123,6 +123,7 @@
   .busy::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 10%, transparent), transparent);
                  transform: translateX(-100%); animation: shimmer 1.6s infinite; }
   .busy small { display: block; font-size: 11.5px; color: var(--muted); }
+  .busy .ic { width: 34px; height: 34px; flex: none; border-radius: 9px; display: grid; place-items: center; background: var(--sunken); }
   @keyframes shimmer { to { transform: translateX(100%); } }
   .spin { width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; flex: none; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -252,12 +253,13 @@
   .conf.low { color: var(--orange-ink); }
   input.num { font-family: var(--mono); }
 
-  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; table-layout: fixed; }  /* description gets the room left over */
+  th:first-child { width: 26px; } th:last-child { width: 44px; text-align: right; }
   th { text-align: left; font-size: 11.5px; color: var(--muted); font-weight: 550; padding: 4px; border-bottom: 1px solid var(--line); }
   td { padding: 3px 4px; }
   td:first-child { color: var(--faint); width: 22px; font: 12px var(--mono); }
-  .w-num { width: 96px; }
-  .w-qty { width: 56px; }
+  .w-num { width: 88px; }
+  .w-qty { width: 50px; }
   td input.num, .field input.num { text-align: right; }
 
   .toast { position: fixed; bottom: 22px; left: 50%; transform: translate(-50%, 12px); z-index: 40; background: var(--ink); color: var(--bg);
@@ -429,7 +431,7 @@ function renderList() {
 
   const shown = tab === 'all' ? bills : bills.filter(b => b.status === tab);
   list.innerHTML =
-    pending.map(p => `<li class="busy"><span class="spin" aria-hidden="true"></span><span>Reading ${esc(p.name)}…
+    pending.map(p => `<li class="busy"><span class="ic" aria-hidden="true"><span class="spin"></span></span><span>Reading ${esc(p.name)}…
       <small data-start="${p.start}"></small></span></li>`).join('') +
     (shown.length ? shown.map(b => `<li><button type="button" class="item ${b.status} ${current && b.id === current.id ? 'on' : ''}" data-id="${b.id}">
         <span class="ic" aria-hidden="true">${b.document_type === 'claim_form' ? ICON_CLAIM : ICON_BILL}</span>
@@ -438,7 +440,7 @@ function renderList() {
         <span class="m"><span class="num">${money(b.total)}</span>
           <span class="pill ${b.status}">${b.status === 'approved' ? 'Approved' : plural(b.issue_count, 'issue')}</span></span>
       </button></li>`).join('')
-    : pending.length ? '' : bills.length ? '<li class="none">Nothing here.</li>'
+    : pending.length ? '' : bills.length ? `<li class="none">${tab === 'review' ? 'Nothing waiting for review. Every bill is checked.' : 'No approved bills yet.'}</li>`
       : '<li class="none">No bills yet. Upload one, or <button type="button" class="link" data-demo>load the demo bills</button>.</li>');
   tick();
 }

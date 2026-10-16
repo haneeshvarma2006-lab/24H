@@ -436,6 +436,8 @@ def test_accounts_login_and_isolation(client):
         assert "correct-horse" not in str(conn.execute("SELECT * FROM users").fetchall())
         assert all(len(t[0]) == 64 for t in conn.execute("SELECT token FROM sessions"))
     assert client.get("/auth/me").json()["email"] == "test@hayara.ai"
+    missing = client.get("/no-such-page")
+    assert missing.status_code == 404 and "Back to your bills" in missing.text  # branded 404, not a bare error
     client.post("/auth/logout")
     assert client.get("/bills").status_code == 401
 
