@@ -4,58 +4,111 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sign in · Hayara.ai</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Ctext x='16' y='23' font-size='20' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<meta name="description" content="Sign in to Hayara.ai, the hospital bill and insurance claim checker.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231c1a17'/%3E%3Ctext x='16' y='23' font-size='20' font-family='Arial' font-weight='bold' fill='%23f5f4f0' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
+<link rel="preload" href="/fonts/geist-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+  /* self-hosted (SIL OFL): works offline, no third-party requests */
+  @font-face { font-family: "Geist"; font-style: normal; font-weight: 400; font-display: swap; src: url("/fonts/geist-latin-400-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Geist"; font-style: normal; font-weight: 500; font-display: swap; src: url("/fonts/geist-latin-500-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Geist"; font-style: normal; font-weight: 600; font-display: swap; src: url("/fonts/geist-latin-600-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Geist"; font-style: normal; font-weight: 700; font-display: swap; src: url("/fonts/geist-latin-700-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Geist Mono"; font-style: normal; font-weight: 400; font-display: swap; src: url("/fonts/geist-mono-latin-400-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Geist Mono"; font-style: normal; font-weight: 500; font-display: swap; src: url("/fonts/geist-mono-latin-500-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Geist Mono"; font-style: normal; font-weight: 600; font-display: swap; src: url("/fonts/geist-mono-latin-600-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Instrument Serif"; font-style: normal; font-weight: 400; font-display: swap; src: url("/fonts/instrument-serif-latin-400-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Instrument Serif"; font-style: italic; font-weight: 400; font-display: swap; src: url("/fonts/instrument-serif-latin-400-italic.woff2") format("woff2"); }
+  :root { --bg: #f5f4f0; --panel: #fffefb; --line: #e4e1d9; --ink: #1c1a17; --muted: #6b665e; --faint: #6d685f; --field: #fffefb;
+          --accent: #3a4bc9; --accent-soft: #eceefb; --green: #13795b; --red: #b4232f; color-scheme: light; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #121110; --panel: #1a1917; --line: #2b2925; --ink: #edebe6; --muted: #a39e94;
+          --faint: #8e897f; --field: #151412; --accent: #9aa5ff; --accent-soft: #23253d; --green: #4cc79a; --red: #f2787f; color-scheme: dark; } }
+  :root[data-theme="dark"] { --bg: #121110; --panel: #1a1917; --line: #2b2925; --ink: #edebe6; --muted: #a39e94;
+          --faint: #8e897f; --field: #151412; --accent: #9aa5ff; --accent-soft: #23253d; --green: #4cc79a; --red: #f2787f; color-scheme: dark; }
   * { box-sizing: border-box; }
-  body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px; color: #e8ecf6;
-         font-family: "Plus Jakarta Sans", Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-         background: radial-gradient(120% 120% at 0% 0%, #2a2580 0%, #0b1630 50%, #062a33 100%); }
-  .card { width: 100%; max-width: 400px; padding: 32px 28px; border-radius: 20px; background: rgb(15 23 42 / .82);
-          border: 1px solid rgb(255 255 255 / .1); box-shadow: 0 30px 80px rgb(0 0 0 / .45); backdrop-filter: blur(8px); }
-  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
-  .logo { width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center;
-          background: linear-gradient(135deg, #6366f1, #14b8a6); box-shadow: 0 6px 18px rgb(20 184 166 / .35); }
-  .brand strong { font-size: 22px; font-weight: 800; } .brand em { font-style: normal; color: #5eead4; }
-  h1 { font-size: 20px; margin: 0 0 4px; } p { margin: 0 0 20px; color: #a9b3cc; font-size: 14px; }
-  label { display: block; font-size: 13px; font-weight: 600; color: #c7cfe3; margin: 14px 0 6px; }
-  input { width: 100%; font: inherit; color: #fff; background: #0b1224; border: 1px solid #2c3a5a; border-radius: 10px; padding: 11px 12px; }
-  input:focus { outline: none; border-color: #818cf8; box-shadow: 0 0 0 3px rgb(129 140 248 / .3); }
-  button { font: inherit; cursor: pointer; }
-  .go { width: 100%; margin-top: 20px; border: 0; border-radius: 10px; padding: 12px; font-weight: 800; color: #fff;
-        background: linear-gradient(135deg, #6366f1, #4f46e5); box-shadow: 0 6px 18px rgb(79 70 229 / .45); }
-  .go:disabled { opacity: .6; }
-  .switch { margin-top: 16px; text-align: center; font-size: 14px; color: #a9b3cc; }
-  .switch button { border: 0; background: none; color: #a5b4fc; font-weight: 700; text-decoration: underline; padding: 0; }
-  .err { min-height: 20px; margin-top: 12px; color: #fca5a5; font-size: 13.5px; font-weight: 600; }
-  .note { margin-top: 18px; font-size: 12px; color: #8792ad; text-align: center; }
-  :focus-visible { outline: 3px solid #818cf8; outline-offset: 2px; }
-  @keyframes rise { from { opacity: 0; transform: translateY(16px) scale(.98); } }
-  .card { animation: rise .6s cubic-bezier(.2, .7, .2, 1); }
-  .logo { animation: rise .6s .15s cubic-bezier(.2, .7, .2, 1) backwards; }
-  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  body { margin: 0; min-height: 100vh; min-height: 100dvh; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+         font-family: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg);
+         -webkit-font-smoothing: antialiased; }
+  body::after { content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .045; mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .story { padding: 44px 56px; display: flex; flex-direction: column; border-right: 1px solid var(--line); }
+  .brand { display: flex; align-items: center; gap: 11px; }
+  .logo { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; background: var(--ink); color: var(--bg); }
+  .brand strong { font-size: 17px; font-weight: 650; letter-spacing: -.02em; } .brand em { font-style: normal; color: var(--faint); font-weight: 500; }
+  .story h1 { font: 400 clamp(40px, 4.4vw, 60px)/1.03 "Instrument Serif", Georgia, serif; letter-spacing: -.02em; margin: auto 0 18px; max-width: 13ch; text-wrap: balance; }
+  .story h1 em { color: var(--accent); }
+  .story p { color: var(--muted); font-size: 16px; line-height: 1.6; max-width: 46ch; margin: 0; text-wrap: pretty; }
+  .proof { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 0; margin: 40px 0 auto; border-top: 1px solid var(--line); padding-top: 18px; }
+  .proof div { padding-right: 28px; margin-right: 28px; border-right: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
+  .proof div:last-child { border: 0; }
+  .proof b { display: block; font: 500 24px "Geist Mono", ui-monospace, monospace; color: var(--ink); letter-spacing: -.03em; margin-bottom: 2px; }
+  .fine { font-size: 12px; color: var(--faint); margin-top: 32px; }
+  .side { display: grid; place-items: center; padding: 32px 24px; }
+  .card { width: 100%; max-width: 380px; }
+  h2 { font-size: 24px; font-weight: 650; letter-spacing: -.02em; margin: 0 0 6px; }
+  .sub { margin: 0 0 26px; color: var(--muted); font-size: 14.5px; }
+  label { display: block; font-size: 13px; font-weight: 550; margin: 16px 0 6px; }
+  input { width: 100%; font: inherit; font-size: 15px; color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px;
+          transition: border-color .18s, box-shadow .18s; }
+  input:hover { border-color: color-mix(in srgb, var(--line) 60%, var(--muted)); }
+  input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  button { font: inherit; cursor: pointer; transition: background-color .18s, transform .18s, box-shadow .18s, color .18s; }
+  button:active:not(:disabled) { transform: scale(.98); }
+  .go { width: 100%; margin-top: 22px; border: 0; border-radius: 10px; padding: 12px; font-weight: 600; font-size: 15px; color: var(--bg); background: var(--ink); }
+  .go:hover { background: color-mix(in srgb, var(--ink) 86%, var(--bg)); box-shadow: 0 10px 24px -12px rgb(40 30 10 / .5); }
+  .go:disabled { opacity: .6; cursor: progress; }
+  .switch { margin-top: 18px; font-size: 14px; color: var(--muted); }
+  .switch button { border: 0; background: none; color: var(--accent); font-weight: 600; padding: 0; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+  .err { min-height: 20px; margin-top: 12px; color: var(--red); font-size: 13.5px; font-weight: 550; }
+  .note { margin-top: 26px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--faint); display: flex; gap: 8px; align-items: flex-start; }
+  .note svg { flex: none; margin-top: 1px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+  .story > *, .card { animation: rise .7s cubic-bezier(.2, .7, .2, 1) backwards; }
+  .story > :nth-child(2) { animation-delay: .08s; } .story > :nth-child(3) { animation-delay: .16s; } .story > :nth-child(4) { animation-delay: .24s; }
+  .card { animation-delay: .12s; }
+  @media (max-width: 860px) {
+    body { grid-template-columns: minmax(0, 1fr); }
+    .story { padding: 28px 24px 8px; border-right: 0; }
+    .story h1 { margin-top: 36px; font-size: 40px; } .story p, .proof, .fine { display: none; }
+    .side { place-items: start center; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
-<main class="card">
+<section class="story" aria-label="About Hayara.ai">
   <div class="brand">
-    <div class="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M5 4v16M19 4v16M5 12h14"/><path d="M9 8l3-3 3 3" stroke-width="2"/></svg></div>
+    <div class="logo" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 4v16M19 4v16M5 12h14"/><path d="M9 8l3-3 3 3" stroke-width="2"/></svg></div>
     <strong>Hayara<em>.ai</em></strong>
   </div>
-  <h1 id="title">Sign in</h1>
-  <p id="sub">Your bills stay in your own account.</p>
-  <form id="form" novalidate>
-    <label for="email">Email</label>
-    <input id="email" type="email" autocomplete="username" required maxlength="254">
-    <label for="password">Password</label>
-    <input id="password" type="password" autocomplete="current-password" required minlength="8" maxlength="200">
-    <button class="go" id="go" type="submit">Sign in</button>
-    <div class="err" id="err" role="alert"></div>
-  </form>
-  <div class="switch"><span id="ask">New here?</span> <button type="button" id="mode">Create an account</button></div>
-  <div class="note">Passwords are stored as salted scrypt hashes. Sessions expire after 7 days.</div>
+  <h1>Every hospital bill, <em>checked line by line.</em></h1>
+  <p>Hayara reads bills and insurance claims from scans, photos and PDFs, re-does the arithmetic, and sends only the uncertain ones to a person.</p>
+  <div class="proof">
+    <div><b>97.6%</b>fields read offline</div>
+    <div><b>4 / 4</b>planted errors caught</div>
+    <div><b>0</b>bytes sent out in local mode</div>
+  </div>
+  <div class="fine">Measured on our 9 fictitious demo documents.</div>
+</section>
+<main class="side">
+  <div class="card">
+    <h2 id="title">Sign in</h2>
+    <p class="sub" id="sub">Your bills stay in your own account.</p>
+    <form id="form" novalidate>
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="username" required maxlength="254" placeholder="you@hospital.in">
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" required minlength="8" maxlength="200" placeholder="At least 8 characters">
+      <button class="go" id="go" type="submit">Sign in</button>
+      <div class="err" id="err" role="alert"></div>
+    </form>
+    <div class="switch"><span id="ask">New here?</span> <button type="button" id="mode">Create an account</button></div>
+    <div class="note"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      Passwords are stored as salted scrypt hashes. Sessions are HttpOnly cookies and expire after 7 days.</div>
+  </div>
 </main>
 <script>
+try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch {}
 let signup = false;
 const $ = s => document.querySelector(s);
 function setMode(on) {
