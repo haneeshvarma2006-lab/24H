@@ -6,6 +6,13 @@
 <title>Sign in · Hayara.ai</title>
 <meta name="description" content="Sign in to Hayara.ai, the hospital bill and insurance claim checker.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231c1a17'/%3E%3Ctext x='16' y='23' font-size='20' font-family='Arial' font-weight='bold' fill='%23f5f4f0' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Hayara.ai">
+<meta property="og:title" content="Hayara.ai · Every hospital bill, checked line by line">
+<meta property="og:description" content="Reads hospital bills and insurance claims from any scan, photo or PDF, re-checks every number, and sends only uncertain bills to a human.">
+<meta property="og:image" content="https://hayara-ai.onrender.com/img/og.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="/fonts/geist-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
   /* self-hosted (SIL OFL): works offline, no third-party requests */
@@ -34,14 +41,22 @@
   .brand { display: flex; align-items: center; gap: 11px; }
   .logo { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; background: var(--ink); color: var(--bg); }
   .brand strong { font-size: 17px; font-weight: 650; letter-spacing: -.02em; } .brand em { font-style: normal; color: var(--faint); font-weight: 500; }
-  .story h1 { font: 400 clamp(40px, 4.4vw, 60px)/1.03 "Instrument Serif", Georgia, serif; letter-spacing: -.02em; margin: auto 0 18px; max-width: 13ch; text-wrap: balance; }
+  .story h1 { font: 400 clamp(40px, 4.4vw, 60px)/1.03 "Instrument Serif", Georgia, serif; letter-spacing: -.02em; margin: 56px 0 18px; max-width: 13ch; text-wrap: balance; }
   .story h1 em { color: var(--accent); }
   .story p { color: var(--muted); font-size: 16px; line-height: 1.6; max-width: 46ch; margin: 0; text-wrap: pretty; }
-  .proof { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 0; margin: 40px 0 auto; border-top: 1px solid var(--line); padding-top: 18px; }
+  .proof { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 0; margin: 36px 0 0; border-top: 1px solid var(--line); padding-top: 18px; }
   .proof div { padding-right: 28px; margin-right: 28px; border-right: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
   .proof div:last-child { border: 0; }
   .proof b { display: block; font: 500 24px "Geist Mono", ui-monospace, monospace; color: var(--ink); letter-spacing: -.03em; margin-bottom: 2px; }
-  .fine { font-size: 12px; color: var(--faint); margin-top: 32px; }
+  .fine { font-size: 12px; color: var(--faint); margin-top: 12px; }
+  /* the product itself, bleeding off the panel edge */
+  .story { position: relative; overflow: hidden; }
+  .shot { margin: 40px -56px -44px 0; flex: 1; min-height: 220px; position: relative; }
+  .shot img { position: absolute; top: 0; left: 0; width: 760px; max-width: none; height: auto; border-radius: 12px 0 0 0;
+              border: 1px solid var(--line); box-shadow: 0 30px 60px -24px rgb(40 30 10 / .35); animation: rise .9s .35s cubic-bezier(.2, .7, .2, 1) backwards; }
+  .for-dark { display: none; }
+  :root[data-theme="dark"] .for-dark { display: block; } :root[data-theme="dark"] .for-light { display: none; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .for-dark { display: block; } :root:not([data-theme="light"]) .for-light { display: none; } }
   .side { display: grid; place-items: center; padding: 32px 24px; }
   .card { width: 100%; max-width: 380px; }
   h2 { font-size: 24px; font-weight: 650; letter-spacing: -.02em; margin: 0 0 6px; }
@@ -69,7 +84,7 @@
   @media (max-width: 860px) {
     body { grid-template-columns: minmax(0, 1fr); }
     .story { padding: 28px 24px 8px; border-right: 0; }
-    .story h1 { margin-top: 36px; font-size: 40px; } .story p, .proof, .fine { display: none; }
+    .story h1 { margin-top: 36px; font-size: 40px; } .story p, .proof, .fine, .shot { display: none; }
     .side { place-items: start center; }
   }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
@@ -89,6 +104,10 @@
     <div><b>0</b>bytes sent out in local mode</div>
   </div>
   <div class="fine">Measured on our 9 fictitious demo documents.</div>
+  <figure class="shot">
+    <img class="for-light" src="/img/preview-light.webp" width="1440" height="900" alt="Hayara.ai reviewing a hospital bill: the total is flagged because the items add up to ₹5,730.00, not ₹6,530.00.">
+    <img class="for-dark" src="/img/preview-dark.webp" width="1440" height="900" alt="Hayara.ai in dark mode, flagging a bill with a missing patient name and a duplicated medicine." loading="lazy">
+  </figure>
 </section>
 <main class="side">
   <div class="card">

@@ -7,3 +7,4 @@ data/cache
 *.pptx
 *.pdf
 !data/samples/*.pdf
+docs

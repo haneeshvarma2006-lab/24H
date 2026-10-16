@@ -35,7 +35,7 @@ Hayara.ai reads scanned bills and claim forms and returns clean, verified data r
 - **06 Cloud, deployment and dev tools:** Git and GitHub, VS Code, Postman; deploy on Render or Railway, or a local server
 
 ## Slide 4: Solution architecture & workflow diagram
-Draw 5 boxes left to right, joined by arrows:
+**Ready-made image:** [`../architecture.png`](../architecture.png) (current system, 2400×1400). Or draw 5 boxes left to right, joined by arrows:
 
 ```
 [1. UPLOAD]  →  [2. AI EXTRACTION]  →  [3. VALIDATION]  --pass-->  [4. AUTO-APPROVED]  →  [5. OUTPUT]

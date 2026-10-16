@@ -419,6 +419,7 @@ def test_accounts_login_and_isolation(client):
     assert other.get("/", follow_redirects=False).headers["location"] == "/login.html"
     assert other.get("/login.html").status_code == 200 and other.get("/health").status_code == 200
     assert other.get("/fonts/geist-latin-400-normal.woff2").status_code == 200  # the sign-in page needs its fonts
+    assert other.get("/img/preview-light.webp").status_code == 200 and other.get("/img/og.png").status_code == 200  # and images
     assert other.get("/fonts/../index.html", follow_redirects=False).status_code == 303 and other.get("/fonts/x.txt").status_code == 401
     assert other.post("/auth/signup", json={"email": "test@hayara.ai", "password": "another-pass"}).status_code == 409
     assert other.post("/auth/login", json={"email": "test@hayara.ai", "password": "wrong-pass"}).status_code == 401

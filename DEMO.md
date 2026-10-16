@@ -8,6 +8,7 @@ del hayara.db                      # start with an empty dashboard
 $env:EXTRACTOR="local"             # fully offline; remove this line to try Gemini first (falls back to local by itself)
 python -m uvicorn backend.app:app --port 8001
 ```
+Live backup: **https://hayara-ai.onrender.com** (open it 5 min early; free server wakes in ~1 min).
 Open http://127.0.0.1:8001/ and **Create an account** (any email, 8+ character password; e.g. `demo@hayara.ai` / `alethians2026`). Keep `D:\24H\data\samples` open in Explorer. Charger plugged in, laptop on "never sleep".
 
 ## Results (real measurements — only these numbers on slides)
@@ -30,9 +31,9 @@ Honest limits: Gemini and local-mode numbers come from our 9 demo documents (the
 - Works on scans, phone photos and PDFs
 
 ## 3-minute live demo
-0. **Sign in** (dark login page). *"Each hospital or insurer gets its own account: nobody else can see their bills."*
-1. **Click "▶ Try the demo bills"** on the start page (or Ctrl+A in data/samples and drop them). Loads in seconds: for these 9 the engine's output is saved (the free server has ~0.1 CPU). To show live reading, upload any other bill or a phone photo (~30-60 s on Render, ~3 s on the laptop). *"Any hospital, any layout: scan, phone photo, PDF."*
-2. **bill_01 → Approved, trust ring 100%.** Hover fields: *"Click-to-source: every value is shown where it was read."* Point at the top: *"Read → Math checked → Verified → Export. 'No human needed' shows how much we automate."*
+0. **Sign in** (the page shows the product and our measured numbers; light or dark follows the laptop). *"Each hospital or insurer gets its own account: nobody else can see their bills."*
+1. **Click "Try the demo bills"** on the start page (or Ctrl+A in data/samples and drop them). Loads in seconds: for these 9 the engine's output is saved (the free server has ~0.1 CPU). To show live reading, upload any other bill or a phone photo (~30-60 s on Render, ~3 s on the laptop). *"Any hospital, any layout: scan, phone photo, PDF."*
+2. **bill_01 → Approved, trust ring 100%.** Hover fields: *"Click-to-source: every value is shown where it was read."* Point at the top: *"Read → Checks passed → Verified → Export. 'No human needed' shows how much we automate."*
 3. **bill_02 → wrong total.** *"The bill says ₹6,530, the items add up to ₹5,730. The AI read it right; the math caught the hospital's mistake."* Click the issue → type 5730 → Enter → Approved (top bar: **fixes → training data** goes up by 1: *"every human fix becomes training data for our model"*) → **Review next →** jumps to the next bill in the queue.
 4. **bill_03 →** missing patient name + same medicine billed twice.
 5. **bill_06 →** *"HbA1c: 2 × 400 = 800, bill says 900."*

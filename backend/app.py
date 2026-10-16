@@ -77,7 +77,7 @@ async def require_header(request: Request, call_next):
     # other websites can still fire simple cross-site POSTs; a custom header forces a CORS preflight they fail
     if request.method in ("POST", "PATCH") and request.headers.get("x-hayara") != "1":
         return Response("Missing X-Hayara header", status_code=403)
-    if request.url.path not in PUBLIC and not re.fullmatch(r"/fonts/[\w-]+\.woff2", request.url.path):
+    if request.url.path not in PUBLIC and not re.fullmatch(r"/fonts/[\w-]+\.woff2|/img/[\w-]+\.(webp|png)", request.url.path):
         uid = session_user(request.cookies.get("hayara_session"))
         if uid is None:  # every page and API call needs a signed-in user
             if request.method == "GET" and request.url.path in ("/", "/index.html"):
